@@ -17,9 +17,12 @@
 
 namespace bustub {
 
-BufferPoolManagerInstance::BufferPoolManagerInstance(size_t pool_size, DiskManager *disk_manager, size_t replacer_k,
+BufferPoolManagerInstance::BufferPoolManagerInstance(size_t pool_size,
+                                                     DiskManager *disk_manager,
+                                                     size_t replacer_k,
                                                      LogManager *log_manager)
-    : pool_size_(pool_size), disk_manager_(disk_manager), log_manager_(log_manager) {
+    : pool_size_(pool_size), disk_manager_(disk_manager),
+      log_manager_(log_manager) {
   // we allocate a consecutive memory space for the buffer pool
   pages_ = new Page[pool_size_];
   page_table_ = new ExtendibleHashTable<page_id_t, frame_id_t>(bucket_size_);
@@ -30,9 +33,11 @@ BufferPoolManagerInstance::BufferPoolManagerInstance(size_t pool_size, DiskManag
     free_list_.emplace_back(static_cast<int>(i));
   }
 
-  // TODO(students): remove this line after you have implemented the buffer pool manager
+  // TODO(students): remove this line after you have implemented the buffer pool
+  // manager
   throw NotImplementedException(
-      "BufferPoolManager is not implemented yet. If you have finished implementing BPM, please remove the throw "
+      "BufferPoolManager is not implemented yet. If you have finished "
+      "implementing BPM, please remove the throw "
       "exception line in `buffer_pool_manager_instance.cpp`.");
 }
 
@@ -42,18 +47,31 @@ BufferPoolManagerInstance::~BufferPoolManagerInstance() {
   delete replacer_;
 }
 
-auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * { return nullptr; }
+auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
+  return nullptr;
+}
 
-auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * { return nullptr; }
+auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * {
+  return nullptr;
+}
 
-auto BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) -> bool { return false; }
+auto BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty)
+    -> bool {
+  return false;
+}
 
-auto BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) -> bool { return false; }
+auto BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) -> bool {
+  return false;
+}
 
 void BufferPoolManagerInstance::FlushAllPgsImp() {}
 
-auto BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) -> bool { return false; }
+auto BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) -> bool {
+  return false;
+}
 
-auto BufferPoolManagerInstance::AllocatePage() -> page_id_t { return next_page_id_++; }
+auto BufferPoolManagerInstance::AllocatePage() -> page_id_t {
+  return next_page_id_++;
+}
 
-}  // namespace bustub
+} // namespace bustub

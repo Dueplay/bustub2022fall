@@ -49,7 +49,8 @@ auto ExtendibleHashTable<K, V>::GetLocalDepth(int dir_index) const -> int {
 }
 
 template <typename K, typename V>
-auto ExtendibleHashTable<K, V>::GetLocalDepthInternal(int dir_index) const -> int {
+auto ExtendibleHashTable<K, V>::GetLocalDepthInternal(int dir_index) const
+    -> int {
   return dir_[dir_index]->GetDepth();
 }
 
@@ -83,7 +84,8 @@ void ExtendibleHashTable<K, V>::Insert(const K &key, const V &value) {
 // Bucket
 //===--------------------------------------------------------------------===//
 template <typename K, typename V>
-ExtendibleHashTable<K, V>::Bucket::Bucket(size_t array_size, int depth) : size_(array_size), depth_(depth) {}
+ExtendibleHashTable<K, V>::Bucket::Bucket(size_t array_size, int depth)
+    : size_(array_size), depth_(depth) {}
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
@@ -96,7 +98,8 @@ auto ExtendibleHashTable<K, V>::Bucket::Remove(const K &key) -> bool {
 }
 
 template <typename K, typename V>
-auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> bool {
+auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value)
+    -> bool {
   UNREACHABLE("not implemented");
 }
 
@@ -107,4 +110,4 @@ template class ExtendibleHashTable<int, int>;
 template class ExtendibleHashTable<int, std::string>;
 template class ExtendibleHashTable<int, std::list<int>::iterator>;
 
-}  // namespace bustub
+} // namespace bustub
