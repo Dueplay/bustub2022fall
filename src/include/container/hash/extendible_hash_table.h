@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <list>
 #include <memory>
 #include <mutex> // NOLINT
@@ -65,6 +66,8 @@ public:
    */
   auto GetNumBuckets() const -> int;
 
+  // debug
+  void PrettyPrint();
   /**
    *
    * TODO(P1): Add implementation
@@ -161,13 +164,13 @@ public:
      * @return True if the key-value pair is inserted, false otherwise.
      */
     auto Insert(const K &key, const V &value) -> bool;
+    std::list<std::pair<K, V>> list_;
 
   private:
     // TODO(student): You may add additional private members and helper
     // functions
     size_t size_;
     int depth_;
-    std::list<std::pair<K, V>> list_;
   };
 
 private:
@@ -187,7 +190,8 @@ private:
    * @brief Redistribute the kv pairs in a full bucket.
    * @param bucket The bucket to be redistributed.
    */
-  auto RedistributeBucket(std::shared_ptr<Bucket> bucket) -> void;
+  auto RedistributeBucket(std::shared_ptr<Bucket> bucket, int64_t index)
+      -> void;
 
   /*****************************************************************
    * Must acquire latch_ first before calling the below functions. *

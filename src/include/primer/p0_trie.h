@@ -51,6 +51,7 @@ public:
     key_char_ = other_trie_node.key_char_;
     // move semantics to transfer the ownership of unique_ptr
     // from other_trie_node to current one
+    // 将容器中存储的元素全部移动到其他容器中。make_move_iterator返回一个move_iterator，若此迭代器用作输入迭代器，则效果是值被移动，而非复制。
     children_ = std::unordered_map<char, std::unique_ptr<TrieNode>>(
         std::make_move_iterator(other_trie_node.children_.begin()),
         std::make_move_iterator(other_trie_node.children_.end()));
@@ -398,6 +399,7 @@ public:
     (*node)->SetEndNode(false);
     // find lineage from root to terminal node
     std::vector<std::unique_ptr<TrieNode> *> traverses;
+    // unique_ptr's pointer,因为unique_ptr不能复制到vector中
     auto *curr = &root_;
     traverses.push_back(curr);
     for (const char c : key) {
