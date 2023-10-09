@@ -27,6 +27,7 @@ namespace bustub {
 template <typename K, typename V>
 ExtendibleHashTable<K, V>::ExtendibleHashTable(size_t bucket_size)
     : global_depth_(0), bucket_size_(bucket_size), num_buckets_(1) {
+  // dir nums = 2^global_depth
   dir_.push_back(std::make_shared<Bucket>(bucket_size_, 0));
 }
 
@@ -93,14 +94,16 @@ void ExtendibleHashTable<K, V>::Insert(const K &key, const V &value) {
     auto index = IndexOf(key);
     auto bucket_ptr = dir_[index];
     auto global_extend = false;
+    // 如果溢出桶的本地深度等于全局深度，那么需要执行目录扩张和桶分裂
     if (bucket_ptr->GetDepth() == global_depth_) {
       global_depth_++;
       dir_.resize(std::pow(2, global_depth_), nullptr);
       global_extend = true;
     }
-
+    // 如果局部深度小于全局深度，那么仅仅发生桶分裂。然后仅仅把局部深度增加1.这种情况是多个dir指针指向同一个bucket
     RedistributeBucket(bucket_ptr, index);
 
+    // 桶扩张需要将新的指针指向同一个桶
     if (global_extend) {
       auto curr_dir_size = dir_.size();
       auto old_dir_size = curr_dir_size >> 1;
@@ -128,6 +131,7 @@ auto ExtendibleHashTable<K, V>::RedistributeBucket(
   num_buckets_++;
 
   // redistribute the directory pointer for this bucket‘s split
+  // index % old_gap 为指向这个bucket的第一个指针
   for (u_int64_t i = index % old_gap; i < dir_.size(); i += old_gap) {
     if (dir_[i] == nullptr || dir_[i] == bucket) {
       auto prefix_bit = (i >> old_depth) & 1;
