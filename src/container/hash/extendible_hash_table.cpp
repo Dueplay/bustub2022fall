@@ -11,10 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 #include <cassert>
+#include <cmath>
 #include <cstdlib>
 #include <functional>
 #include <list>
-#include <math.h>
 #include <sstream>
 #include <utility>
 
@@ -57,8 +57,7 @@ auto ExtendibleHashTable<K, V>::GetLocalDepth(int dir_index) const -> int {
 }
 
 template <typename K, typename V>
-auto ExtendibleHashTable<K, V>::GetLocalDepthInternal(int dir_index) const
-    -> int {
+auto ExtendibleHashTable<K, V>::GetLocalDepthInternal(int dir_index) const -> int {
   return dir_[dir_index]->GetDepth();
 }
 
@@ -117,17 +116,14 @@ void ExtendibleHashTable<K, V>::Insert(const K &key, const V &value) {
 }
 
 template <typename K, typename V>
-auto ExtendibleHashTable<K, V>::RedistributeBucket(
-    std::shared_ptr<Bucket> bucket, int64_t index) -> void {
+auto ExtendibleHashTable<K, V>::RedistributeBucket(std::shared_ptr<Bucket> bucket, int64_t index) -> void {
   auto old_depth = bucket->GetDepth();
   int64_t old_gap = std::pow(2, old_depth);
   bucket->IncrementDepth();
 
   // this overflow bucket will be split into two bucket
-  auto even_new_bucket =
-      std::make_shared<Bucket>(bucket_size_, bucket->GetDepth());
-  auto odd_new_bucket =
-      std::make_shared<Bucket>(bucket_size_, bucket->GetDepth());
+  auto even_new_bucket = std::make_shared<Bucket>(bucket_size_, bucket->GetDepth());
+  auto odd_new_bucket = std::make_shared<Bucket>(bucket_size_, bucket->GetDepth());
   num_buckets_++;
 
   // redistribute the directory pointer for this bucket‘s split
@@ -150,13 +146,11 @@ template <typename K, typename V>
 void ExtendibleHashTable<K, V>::PrettyPrint() {
   std::scoped_lock<std::mutex> lock(latch_);
 
-  std::string buffer =
-      "\n\t Global depth " + std::to_string(GetGlobalDepthInternal()) +
-      ", Dir size " + std::to_string(dir_.size()) + ", Number of buckets " +
-      std::to_string(GetNumBucketsInternal());
+  std::string buffer = "\n\t Global depth " + std::to_string(GetGlobalDepthInternal()) + ", Dir size " +
+                       std::to_string(dir_.size()) + ", Number of buckets " + std::to_string(GetNumBucketsInternal());
   for (size_t i = 0; i < dir_.size(); ++i) {
-    buffer += "\n\t\t dir[" + std::to_string(i) + "]: Local depth " +
-              std::to_string(GetLocalDepthInternal(i)) + ", elements [ ";
+    buffer += "\n\t\t dir[" + std::to_string(i) + "]: Local depth " + std::to_string(GetLocalDepthInternal(i)) +
+              ", elements [ ";
     std::ostringstream oss;
     auto &items = dir_[i]->GetItems();
     for (auto it = items.begin(); it != items.end(); ++it) {
@@ -172,8 +166,7 @@ void ExtendibleHashTable<K, V>::PrettyPrint() {
 // Bucket
 //===--------------------------------------------------------------------===//
 template <typename K, typename V>
-ExtendibleHashTable<K, V>::Bucket::Bucket(size_t array_size, int depth)
-    : size_(array_size), depth_(depth) {}
+ExtendibleHashTable<K, V>::Bucket::Bucket(size_t array_size, int depth) : size_(array_size), depth_(depth) {}
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
@@ -190,15 +183,14 @@ auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
     return last;
   }
   */
-  auto it = std::find_if(
-      list_.begin(), list_.end(),
-      [key](const std::pair<K, V> &element) { return element.first == key; });
+  auto it =
+      std::find_if(list_.begin(), list_.end(), [key](const std::pair<K, V> &element) { return element.first == key; });
   if (it != list_.end()) {
     value = it->second;
     return true;
-  } else {
-    return false;
   }
+  return false;
+
   // simple
   /*
   for (const auto &[k, v] : list_) {
@@ -214,15 +206,14 @@ auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Remove(const K &key) -> bool {
   // std 算法库
-  auto it = std::find_if(
-      list_.begin(), list_.end(),
-      [key](const std::pair<K, V> &element) { return element.first == key; });
+  auto it =
+      std::find_if(list_.begin(), list_.end(), [key](const std::pair<K, V> &element) { return element.first == key; });
   if (it != list_.end()) {
     list_.erase(it);
     return true;
-  } else {
-    return false;
   }
+  return false;
+
   // 遍历的方法
   /*
   for (auto it = list_.cbegin(); it != list_.cend(); it++) {
@@ -236,11 +227,9 @@ auto ExtendibleHashTable<K, V>::Bucket::Remove(const K &key) -> bool {
 }
 
 template <typename K, typename V>
-auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value)
-    -> bool {
-  auto it = std::find_if(
-      list_.begin(), list_.end(),
-      [key](const std::pair<K, V> &element) { return element.first == key; });
+auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> bool {
+  auto it =
+      std::find_if(list_.begin(), list_.end(), [key](const std::pair<K, V> &element) { return element.first == key; });
   if (it != list_.end()) {
     it->second = value;
   } else {
@@ -276,4 +265,4 @@ template class ExtendibleHashTable<int, int>;
 template class ExtendibleHashTable<int, std::string>;
 template class ExtendibleHashTable<int, std::list<int>::iterator>;
 
-} // namespace bustub
+}  // namespace bustub

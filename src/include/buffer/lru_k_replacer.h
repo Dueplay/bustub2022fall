@@ -14,7 +14,9 @@
 
 #include <limits>
 #include <list>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
+#include <queue>
+#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -22,6 +24,37 @@
 #include "common/macros.h"
 
 namespace bustub {
+
+class LRUKFrameRecord {
+ public:
+  explicit LRUKFrameRecord(size_t frame_id, size_t k);
+  DISALLOW_COPY_AND_MOVE(LRUKFrameRecord);
+  auto IsEvictable() const -> bool;
+  auto SetEvictable(bool is_evictable) -> void;
+  auto Access(uint64_t time) -> void;
+  auto LastKAccessTime() const -> uint64_t;
+  auto EarliestAccessTime() const -> uint64_t;
+  auto AccessSize() const -> size_t;
+  auto GetFrameId() const -> size_t;
+
+ private:
+  bool is_evictable_{false};
+  size_t frame_id_;
+  size_t k_;
+  std::queue<uint64_t> access_records_;
+};
+
+struct PermatureFrameComp {
+  auto operator()(LRUKFrameRecord *lhs, LRUKFrameRecord *rhs) const -> bool {
+    return lhs->EarliestAccessTime() < rhs->EarliestAccessTime();
+  }
+};
+
+struct MatureFrameComp {
+  auto operator()(LRUKFrameRecord *lhs, LRUKFrameRecord *rhs) const -> bool {
+    return lhs->LastKAccessTime() < rhs->LastKAccessTime();
+  }
+};
 
 /**
  * LRUKReplacer implements the LRU-k replacement policy.
@@ -35,7 +68,9 @@ namespace bustub {
  * k-distance, classical LRU algorithm is used to choose victim.
  */
 class LRUKReplacer {
-public:
+  using container_iterator = std::set<LRUKFrameRecord *>::iterator;
+
+ public:
   /**
    *
    * TODO(P1): Add implementation
@@ -53,7 +88,11 @@ public:
    *
    * @brief Destroys the LRUReplacer.
    */
-  ~LRUKReplacer() = default;
+  ~LRUKReplacer() {
+    for (auto &frame : frames_) {
+      delete frame;
+    }
+  }
 
   /**
    * TODO(P1): Add implementation
@@ -140,14 +179,22 @@ public:
    */
   auto Size() -> size_t;
 
-private:
+  auto CurrTime() -> uint64_t { return current_timestamp_++; }
+
+ private:
+  auto AllocateFrameRecord(size_t frame_id) -> void;
+  auto DeallocateFrameRecord(LRUKReplacer::container_iterator it, bool is_permature) -> void;
+  auto DeallocateFrameRecord(size_t frame_id, bool is_permature) -> void;
   // TODO(student): implement me! You can replace these member variables as you
   // like. Remove maybe_unused if you start using them.
-  [[maybe_unused]] size_t current_timestamp_{0};
-  [[maybe_unused]] size_t curr_size_{0};
-  [[maybe_unused]] size_t replacer_size_;
-  [[maybe_unused]] size_t k_;
+  size_t current_timestamp_{0};
+  size_t curr_size_{0};
+  size_t replacer_size_{0};
+  size_t k_;
   std::mutex latch_;
+  std::vector<LRUKFrameRecord *> frames_;
+  std::set<LRUKFrameRecord *, PermatureFrameComp> lru_permature_;
+  std::set<LRUKFrameRecord *, MatureFrameComp> lru_mature_;
 };
 
-} // namespace bustub
+}  // namespace bustub

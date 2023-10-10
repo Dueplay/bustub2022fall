@@ -27,7 +27,7 @@ namespace bustub {
  * Inserted values are always pulled from a child executor.
  */
 class InsertExecutor : public AbstractExecutor {
-public:
+ public:
   /**
    * Construct a new InsertExecutor instance.
    * @param exec_ctx The executor context
@@ -56,13 +56,11 @@ public:
   auto Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the insert */
-  auto GetOutputSchema() const -> const Schema & override {
-    return plan_->OutputSchema();
-  };
+  auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
-private:
+ private:
   /** The insert plan node to be executed*/
   const InsertPlanNode *plan_;
 };
 
-} // namespace bustub
+}  // namespace bustub

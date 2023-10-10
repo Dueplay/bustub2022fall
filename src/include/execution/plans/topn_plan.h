@@ -29,7 +29,7 @@ namespace bustub {
  * rows based on limit and order expressions.
  */
 class TopNPlanNode : public AbstractPlanNode {
-public:
+ public:
   /**
    * Construct a new TopNPlanNode instance.
    * @param output The output schema of this topN plan node
@@ -37,12 +37,9 @@ public:
    * @param order_bys The sort expressions and their order by types.
    * @param n Retain n elements.
    */
-  TopNPlanNode(
-      SchemaRef output, AbstractPlanNodeRef child,
-      std::vector<std::pair<OrderByType, AbstractExpressionRef>> order_bys,
-      std::size_t n)
-      : AbstractPlanNode(std::move(output), {std::move(child)}),
-        order_bys_(std::move(order_bys)), n_{n} {}
+  TopNPlanNode(SchemaRef output, AbstractPlanNodeRef child,
+               std::vector<std::pair<OrderByType, AbstractExpressionRef>> order_bys, std::size_t n)
+      : AbstractPlanNode(std::move(output), {std::move(child)}), order_bys_(std::move(order_bys)), n_{n} {}
 
   /** @return The type of the plan node */
   auto GetType() const -> PlanType override { return PlanType::TopN; }
@@ -51,15 +48,11 @@ public:
   auto GetN() const -> size_t { return n_; }
 
   /** @return Get order by expressions */
-  auto GetOrderBy() const
-      -> const std::vector<std::pair<OrderByType, AbstractExpressionRef>> & {
-    return order_bys_;
-  }
+  auto GetOrderBy() const -> const std::vector<std::pair<OrderByType, AbstractExpressionRef>> & { return order_bys_; }
 
   /** @return The child plan node */
   auto GetChildPlan() const -> AbstractPlanNodeRef {
-    BUSTUB_ASSERT(GetChildren().size() == 1,
-                  "TopN should have exactly one child plan.");
+    BUSTUB_ASSERT(GetChildren().size() == 1, "TopN should have exactly one child plan.");
     return GetChildAt(0);
   }
 
@@ -68,8 +61,8 @@ public:
   std::vector<std::pair<OrderByType, AbstractExpressionRef>> order_bys_;
   std::size_t n_;
 
-protected:
+ protected:
   auto PlanNodeToString() const -> std::string override;
 };
 
-} // namespace bustub
+}  // namespace bustub

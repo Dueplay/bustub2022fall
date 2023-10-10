@@ -52,16 +52,11 @@ struct SimplifiedToken {
   int32_t start_;
 };
 
-enum class KeywordCategory : uint8_t {
-  KEYWORD_RESERVED,
-  KEYWORD_UNRESERVED,
-  KEYWORD_TYPE_FUNC,
-  KEYWORD_COL_NAME
-};
+enum class KeywordCategory : uint8_t { KEYWORD_RESERVED, KEYWORD_UNRESERVED, KEYWORD_TYPE_FUNC, KEYWORD_COL_NAME };
 
 struct ParserKeyword {
   std::string name_;
   KeywordCategory category_;
 };
 
-} // namespace bustub
+}  // namespace bustub

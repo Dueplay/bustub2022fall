@@ -28,16 +28,16 @@ namespace bustub {
  * The SeqScanPlanNode represents a sequential table scan operation.
  */
 class SeqScanPlanNode : public AbstractPlanNode {
-public:
+ public:
   /**
    * Construct a new SeqScanPlanNode instance.
    * @param output The output schema of this sequential scan plan node
    * @param table_oid The identifier of table to be scanned
    */
-  SeqScanPlanNode(SchemaRef output, table_oid_t table_oid,
-                  std::string table_name,
+  SeqScanPlanNode(SchemaRef output, table_oid_t table_oid, std::string table_name,
                   AbstractExpressionRef filter_predicate = nullptr)
-      : AbstractPlanNode(std::move(output), {}), table_oid_{table_oid},
+      : AbstractPlanNode(std::move(output), {}),
+        table_oid_{table_oid},
         table_name_(std::move(table_name)),
         filter_predicate_(std::move(filter_predicate)) {}
 
@@ -63,14 +63,13 @@ public:
   */
   AbstractExpressionRef filter_predicate_;
 
-protected:
+ protected:
   auto PlanNodeToString() const -> std::string override {
     if (filter_predicate_) {
-      return fmt::format("SeqScan {{ table={}, filter={} }}", table_name_,
-                         filter_predicate_);
+      return fmt::format("SeqScan {{ table={}, filter={} }}", table_name_, filter_predicate_);
     }
     return fmt::format("SeqScan {{ table={} }}", table_name_);
   }
 };
 
-} // namespace bustub
+}  // namespace bustub

@@ -29,9 +29,8 @@ class LockManager;
  * TransactionManager keeps track of all the transactions running in the system.
  */
 class TransactionManager {
-public:
-  explicit TransactionManager(LockManager *lock_manager,
-                              LogManager *log_manager = nullptr)
+ public:
+  explicit TransactionManager(LockManager *lock_manager, LogManager *log_manager = nullptr)
       : lock_manager_(lock_manager), log_manager_(log_manager) {}
 
   ~TransactionManager() = default;
@@ -43,8 +42,7 @@ public:
    * @param isolation_level an optional isolation level of the transaction.
    * @return an initialized transaction
    */
-  auto Begin(Transaction *txn = nullptr,
-             IsolationLevel isolation_level = IsolationLevel::REPEATABLE_READ)
+  auto Begin(Transaction *txn = nullptr, IsolationLevel isolation_level = IsolationLevel::REPEATABLE_READ)
       -> Transaction *;
 
   /**
@@ -75,8 +73,7 @@ public:
    */
   static auto GetTransaction(txn_id_t txn_id) -> Transaction * {
     std::shared_lock<std::shared_mutex> l(TransactionManager::txn_map_mutex);
-    assert(TransactionManager::txn_map.find(txn_id) !=
-           TransactionManager::txn_map.end());
+    assert(TransactionManager::txn_map.find(txn_id) != TransactionManager::txn_map.end());
     auto *res = TransactionManager::txn_map[txn_id];
     assert(res != nullptr);
     return res;
@@ -89,7 +86,7 @@ public:
   /** Resumes all transactions, used for checkpointing. */
   void ResumeTransactions();
 
-private:
+ private:
   /**
    * Releases all the locks held by the given transaction.
    * @param txn the transaction whose locks should be released
@@ -148,4 +145,4 @@ private:
   ReaderWriterLatch global_txn_latch_;
 };
 
-} // namespace bustub
+}  // namespace bustub

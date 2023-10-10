@@ -41,7 +41,7 @@ class ColumnValueExpression;
  * The context for the planner. Used for planning aggregation calls.
  */
 class PlannerContext {
-public:
+ public:
   PlannerContext() = default;
 
   void AddAggregation(std::unique_ptr<BoundExpression> expr);
@@ -78,7 +78,7 @@ public:
  * statement.
  */
 class Planner {
-public:
+ public:
   explicit Planner(const Catalog &catalog) : catalog_(catalog) {}
 
   // The following parts are undocumented. One `PlanXXX` functions simply
@@ -101,55 +101,42 @@ public:
    */
   auto PlanTableRef(const BoundTableRef &table_ref) -> AbstractPlanNodeRef;
 
-  auto PlanSubquery(const BoundSubqueryRef &table_ref, const std::string &alias)
-      -> AbstractPlanNodeRef;
+  auto PlanSubquery(const BoundSubqueryRef &table_ref, const std::string &alias) -> AbstractPlanNodeRef;
 
-  auto PlanBaseTableRef(const BoundBaseTableRef &table_ref)
-      -> AbstractPlanNodeRef;
+  auto PlanBaseTableRef(const BoundBaseTableRef &table_ref) -> AbstractPlanNodeRef;
 
-  auto PlanCrossProductRef(const BoundCrossProductRef &table_ref)
-      -> AbstractPlanNodeRef;
+  auto PlanCrossProductRef(const BoundCrossProductRef &table_ref) -> AbstractPlanNodeRef;
 
   auto PlanJoinRef(const BoundJoinRef &table_ref) -> AbstractPlanNodeRef;
 
   auto PlanCTERef(const BoundCTERef &table_ref) -> AbstractPlanNodeRef;
 
-  auto PlanExpressionListRef(const BoundExpressionListRef &table_ref)
-      -> AbstractPlanNodeRef;
+  auto PlanExpressionListRef(const BoundExpressionListRef &table_ref) -> AbstractPlanNodeRef;
 
   void AddAggCallToContext(BoundExpression &expr);
 
-  auto PlanExpression(const BoundExpression &expr,
-                      const std::vector<AbstractPlanNodeRef> &children)
+  auto PlanExpression(const BoundExpression &expr, const std::vector<AbstractPlanNodeRef> &children)
       -> std::tuple<std::string, AbstractExpressionRef>;
 
-  auto PlanBinaryOp(const BoundBinaryOp &expr,
-                    const std::vector<AbstractPlanNodeRef> &children)
+  auto PlanBinaryOp(const BoundBinaryOp &expr, const std::vector<AbstractPlanNodeRef> &children)
       -> AbstractExpressionRef;
 
-  auto PlanColumnRef(const BoundColumnRef &expr,
-                     const std::vector<AbstractPlanNodeRef> &children)
+  auto PlanColumnRef(const BoundColumnRef &expr, const std::vector<AbstractPlanNodeRef> &children)
       -> std::tuple<std::string, std::shared_ptr<ColumnValueExpression>>;
 
-  auto PlanConstant(const BoundConstant &expr,
-                    const std::vector<AbstractPlanNodeRef> &children)
+  auto PlanConstant(const BoundConstant &expr, const std::vector<AbstractPlanNodeRef> &children)
       -> AbstractExpressionRef;
 
-  auto PlanSelectAgg(const SelectStatement &statement,
-                     AbstractPlanNodeRef child) -> AbstractPlanNodeRef;
+  auto PlanSelectAgg(const SelectStatement &statement, AbstractPlanNodeRef child) -> AbstractPlanNodeRef;
 
-  auto PlanAggCall(const BoundAggCall &agg_call,
-                   const std::vector<AbstractPlanNodeRef> &children)
+  auto PlanAggCall(const BoundAggCall &agg_call, const std::vector<AbstractPlanNodeRef> &children)
       -> std::tuple<AggregationType, std::vector<AbstractExpressionRef>>;
 
-  auto GetAggCallFromFactory(const std::string &func_name,
-                             std::vector<AbstractExpressionRef> args)
+  auto GetAggCallFromFactory(const std::string &func_name, std::vector<AbstractExpressionRef> args)
       -> std::tuple<AggregationType, std::vector<AbstractExpressionRef>>;
 
-  auto GetBinaryExpressionFromFactory(const std::string &op_name,
-                                      AbstractExpressionRef left,
-                                      AbstractExpressionRef right)
-      -> AbstractExpressionRef;
+  auto GetBinaryExpressionFromFactory(const std::string &op_name, AbstractExpressionRef left,
+                                      AbstractExpressionRef right) -> AbstractExpressionRef;
 
   auto PlanInsert(const InsertStatement &statement) -> AbstractPlanNodeRef;
 
@@ -160,13 +147,12 @@ public:
   /** the root plan node of the plan tree */
   AbstractPlanNodeRef plan_;
 
-private:
+ private:
   PlannerContext ctx_;
 
   class ContextGuard {
-  public:
-    explicit ContextGuard(PlannerContext *ctx)
-        : old_ctx_(std::move(*ctx)), ctx_ptr_(ctx) {
+   public:
+    explicit ContextGuard(PlannerContext *ctx) : old_ctx_(std::move(*ctx)), ctx_ptr_(ctx) {
       *ctx = PlannerContext();
       ctx->cte_list_ = old_ctx_.cte_list_;
     }
@@ -174,7 +160,7 @@ private:
 
     DISALLOW_COPY_AND_MOVE(ContextGuard);
 
-  private:
+   private:
     PlannerContext old_ctx_;
     PlannerContext *ctx_ptr_;
   };
@@ -185,9 +171,7 @@ private:
    */
   auto NewContext() -> ContextGuard { return ContextGuard(&ctx_); }
 
-  auto
-  MakeOutputSchema(const std::vector<std::pair<std::string, TypeId>> &exprs)
-      -> SchemaRef;
+  auto MakeOutputSchema(const std::vector<std::pair<std::string, TypeId>> &exprs) -> SchemaRef;
 
   /** Catalog will be used during the planning process. SHOULD ONLY BE USED IN
    * CODE PATH OF `PlanQuery`, otherwise it's a dangling reference.
@@ -200,4 +184,4 @@ private:
 
 static constexpr const char *const UNNAMED_COLUMN = "<unnamed>";
 
-} // namespace bustub
+}  // namespace bustub

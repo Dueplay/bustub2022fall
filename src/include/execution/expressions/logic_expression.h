@@ -36,34 +36,26 @@ enum class LogicType { And, Or };
  * LogicExpression represents two expressions being computed.
  */
 class LogicExpression : public AbstractExpression {
-public:
+ public:
   /** Creates a new comparison expression representing (left comp_type right).
    */
-  LogicExpression(AbstractExpressionRef left, AbstractExpressionRef right,
-                  LogicType logic_type)
-      : AbstractExpression({std::move(left), std::move(right)},
-                           TypeId::BOOLEAN),
-        logic_type_{logic_type} {
-    if (GetChildAt(0)->GetReturnType() != TypeId::BOOLEAN ||
-        GetChildAt(1)->GetReturnType() != TypeId::BOOLEAN) {
+  LogicExpression(AbstractExpressionRef left, AbstractExpressionRef right, LogicType logic_type)
+      : AbstractExpression({std::move(left), std::move(right)}, TypeId::BOOLEAN), logic_type_{logic_type} {
+    if (GetChildAt(0)->GetReturnType() != TypeId::BOOLEAN || GetChildAt(1)->GetReturnType() != TypeId::BOOLEAN) {
       throw bustub::NotImplementedException("expect boolean from either side");
     }
   }
 
-  auto Evaluate(const Tuple *tuple, const Schema &schema) const
-      -> Value override {
+  auto Evaluate(const Tuple *tuple, const Schema &schema) const -> Value override {
     Value lhs = GetChildAt(0)->Evaluate(tuple, schema);
     Value rhs = GetChildAt(1)->Evaluate(tuple, schema);
     return ValueFactory::GetBooleanValue(PerformComputation(lhs, rhs));
   }
 
-  auto EvaluateJoin(const Tuple *left_tuple, const Schema &left_schema,
-                    const Tuple *right_tuple, const Schema &right_schema) const
-      -> Value override {
-    Value lhs = GetChildAt(0)->EvaluateJoin(left_tuple, left_schema,
-                                            right_tuple, right_schema);
-    Value rhs = GetChildAt(1)->EvaluateJoin(left_tuple, left_schema,
-                                            right_tuple, right_schema);
+  auto EvaluateJoin(const Tuple *left_tuple, const Schema &left_schema, const Tuple *right_tuple,
+                    const Schema &right_schema) const -> Value override {
+    Value lhs = GetChildAt(0)->EvaluateJoin(left_tuple, left_schema, right_tuple, right_schema);
+    Value rhs = GetChildAt(1)->EvaluateJoin(left_tuple, left_schema, right_tuple, right_schema);
     return ValueFactory::GetBooleanValue(PerformComputation(lhs, rhs));
   }
 
@@ -77,7 +69,7 @@ public:
 
   LogicType logic_type_;
 
-private:
+ private:
   auto GetBoolAsCmpBool(const Value &val) const -> CmpBool {
     if (val.IsNull()) {
       return CmpBool::CmpNull;
@@ -92,43 +84,44 @@ private:
     auto l = GetBoolAsCmpBool(lhs);
     auto r = GetBoolAsCmpBool(rhs);
     switch (logic_type_) {
-    case LogicType::And:
-      if (l == CmpBool::CmpFalse || r == CmpBool::CmpFalse) {
-        return CmpBool::CmpFalse;
-      }
-      if (l == CmpBool::CmpTrue && r == CmpBool::CmpTrue) {
-        return CmpBool::CmpTrue;
-      }
-      return CmpBool::CmpNull;
-    case LogicType::Or:
-      if (l == CmpBool::CmpFalse && r == CmpBool::CmpFalse) {
-        return CmpBool::CmpFalse;
-      }
-      if (l == CmpBool::CmpTrue || r == CmpBool::CmpTrue) {
-        return CmpBool::CmpTrue;
-      }
-      return CmpBool::CmpNull;
-    default:
-      UNREACHABLE("Unsupported logic type.");
+      case LogicType::And:
+        if (l == CmpBool::CmpFalse || r == CmpBool::CmpFalse) {
+          return CmpBool::CmpFalse;
+        }
+        if (l == CmpBool::CmpTrue && r == CmpBool::CmpTrue) {
+          return CmpBool::CmpTrue;
+        }
+        return CmpBool::CmpNull;
+      case LogicType::Or:
+        if (l == CmpBool::CmpFalse && r == CmpBool::CmpFalse) {
+          return CmpBool::CmpFalse;
+        }
+        if (l == CmpBool::CmpTrue || r == CmpBool::CmpTrue) {
+          return CmpBool::CmpTrue;
+        }
+        return CmpBool::CmpNull;
+      default:
+        UNREACHABLE("Unsupported logic type.");
     }
   }
 };
-} // namespace bustub
+}  // namespace bustub
 
-template <> struct fmt::formatter<bustub::LogicType> : formatter<string_view> {
+template <>
+struct fmt::formatter<bustub::LogicType> : formatter<string_view> {
   template <typename FormatContext>
   auto format(bustub::LogicType c, FormatContext &ctx) const {
     string_view name;
     switch (c) {
-    case bustub::LogicType::And:
-      name = "and";
-      break;
-    case bustub::LogicType::Or:
-      name = "or";
-      break;
-    default:
-      name = "Unknown";
-      break;
+      case bustub::LogicType::And:
+        name = "and";
+        break;
+      case bustub::LogicType::Or:
+        name = "or";
+        break;
+      default:
+        name = "Unknown";
+        break;
     }
     return formatter<string_view>::format(name, ctx);
   }

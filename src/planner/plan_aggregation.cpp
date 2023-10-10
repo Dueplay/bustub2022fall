@@ -24,8 +24,7 @@
 
 namespace bustub {
 
-auto Planner::PlanAggCall(const BoundAggCall &agg_call,
-                          const std::vector<AbstractPlanNodeRef> &children)
+auto Planner::PlanAggCall(const BoundAggCall &agg_call, const std::vector<AbstractPlanNodeRef> &children)
     -> std::tuple<AggregationType, std::vector<AbstractExpressionRef>> {
   if (agg_call.is_distinct_) {
     throw NotImplementedException("distinct agg is not implemented yet");
@@ -49,8 +48,7 @@ auto Planner::PlanAggCall(const BoundAggCall &agg_call,
 // Looks like a bug.
 
 /* NOLINTNEXTLINE */
-auto Planner::PlanSelectAgg(const SelectStatement &statement,
-                            AbstractPlanNodeRef child) -> AbstractPlanNodeRef {
+auto Planner::PlanSelectAgg(const SelectStatement &statement, AbstractPlanNodeRef child) -> AbstractPlanNodeRef {
   /* Transforming hash agg is complex. Let's see a concrete example here.
    *
    * Now that we have,
@@ -114,56 +112,47 @@ auto Planner::PlanSelectAgg(const SelectStatement &statement,
   // have.
   std::vector<AbstractExpressionRef> input_exprs;
   std::vector<AggregationType> agg_types;
-  auto agg_begin_idx =
-      group_by_exprs
-          .size(); // agg-calls will be after group-bys in the output of agg.
+  auto agg_begin_idx = group_by_exprs.size();  // agg-calls will be after group-bys in the output of agg.
 
   size_t term_idx = 0;
   for (const auto &item : ctx_.aggregations_) {
     if (item->type_ != ExpressionType::AGG_CALL) {
-      throw NotImplementedException(
-          "alias for agg call is not supported for now");
+      throw NotImplementedException("alias for agg call is not supported for now");
     }
     const auto &agg_call = dynamic_cast<const BoundAggCall &>(*item);
     auto [agg_type, exprs] = PlanAggCall(agg_call, {child});
     if (exprs.size() > 1) {
-      throw bustub::NotImplementedException(
-          "only agg call of zero/one arg is supported");
+      throw bustub::NotImplementedException("only agg call of zero/one arg is supported");
     }
     if (exprs.empty()) {
       // Rewrite count(*) into count(1)
-      input_exprs.emplace_back(std::make_shared<ConstantValueExpression>(
-          ValueFactory::GetIntegerValue(1)));
+      input_exprs.emplace_back(std::make_shared<ConstantValueExpression>(ValueFactory::GetIntegerValue(1)));
     } else {
       input_exprs.emplace_back(std::move(exprs[0]));
     }
 
     agg_types.push_back(agg_type);
     output_col_names.emplace_back(fmt::format("agg#{}", term_idx));
-    ctx_.expr_in_agg_.emplace_back(std::make_unique<ColumnValueExpression>(
-        0, agg_begin_idx + term_idx, TypeId::INTEGER));
+    ctx_.expr_in_agg_.emplace_back(
+        std::make_unique<ColumnValueExpression>(0, agg_begin_idx + term_idx, TypeId::INTEGER));
 
     term_idx += 1;
   }
 
-  auto agg_output_schema = AggregationPlanNode::InferAggSchema(
-      group_by_exprs, input_exprs, agg_types);
+  auto agg_output_schema = AggregationPlanNode::InferAggSchema(group_by_exprs, input_exprs, agg_types);
 
   // Create the aggregation plan node for the first phase (finally!)
   AbstractPlanNodeRef plan = std::make_shared<AggregationPlanNode>(
-      std::make_shared<Schema>(ProjectionPlanNode::RenameSchema(
-          agg_output_schema, output_col_names)),
-      std::move(child), std::move(group_by_exprs), std::move(input_exprs),
-      std::move(agg_types));
+      std::make_shared<Schema>(ProjectionPlanNode::RenameSchema(agg_output_schema, output_col_names)), std::move(child),
+      std::move(group_by_exprs), std::move(input_exprs), std::move(agg_types));
 
   // Phase-2: plan filter / projection to match the original select list
 
   // Create filter based on the having clause
   if (!statement.having_->IsInvalid()) {
     auto [_, expr] = PlanExpression(*statement.having_, {plan});
-    plan = std::make_shared<FilterPlanNode>(
-        std::make_shared<Schema>(plan->OutputSchema()), std::move(expr),
-        std::move(plan));
+    plan = std::make_shared<FilterPlanNode>(std::make_shared<Schema>(plan->OutputSchema()), std::move(expr),
+                                            std::move(plan));
   }
 
   // Plan normal select (within aggregation context)
@@ -177,10 +166,9 @@ auto Planner::PlanSelectAgg(const SelectStatement &statement,
   }
 
   return std::make_shared<ProjectionPlanNode>(
-      std::make_shared<Schema>(ProjectionPlanNode::RenameSchema(
-          ProjectionPlanNode::InferProjectionSchema(exprs),
-          final_output_col_names)),
+      std::make_shared<Schema>(
+          ProjectionPlanNode::RenameSchema(ProjectionPlanNode::InferProjectionSchema(exprs), final_output_col_names)),
       std::move(exprs), std::move(plan));
 }
 
-} // namespace bustub
+}  // namespace bustub

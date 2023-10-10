@@ -20,7 +20,7 @@ static constexpr uint32_t TEST9_SIZE = 10;
 static constexpr uint32_t TEST_VARLEN_SIZE = 10;
 
 class TableGenerator {
-public:
+ public:
   /**
    * Constructor
    */
@@ -31,18 +31,10 @@ public:
    */
   void GenerateTestTables();
 
-private:
+ private:
   /** Enumeration to characterize the distribution of values in a given column
    */
-  enum class Dist : uint8_t {
-    Uniform,
-    Zipf_50,
-    Zipf_75,
-    Zipf_95,
-    Zipf_99,
-    Serial,
-    Cyclic
-  };
+  enum class Dist : uint8_t { Uniform, Zipf_50, Zipf_75, Zipf_95, Zipf_99, Serial, Cyclic };
 
   /**
    * Metadata about the data for a given column. Specifically, the type of the
@@ -81,10 +73,8 @@ private:
     /**
      * Constructor
      */
-    ColumnInsertMeta(const char *name, const TypeId type, bool nullable,
-                     Dist dist, uint64_t min, uint64_t max)
-        : name_(name), type_(type), nullable_(nullable), dist_(dist), min_(min),
-          max_(max) {}
+    ColumnInsertMeta(const char *name, const TypeId type, bool nullable, Dist dist, uint64_t min, uint64_t max)
+        : name_(name), type_(type), nullable_(nullable), dist_(dist), min_(min), max_(max) {}
   };
 
   /**
@@ -108,21 +98,18 @@ private:
     /**
      * Constructor
      */
-    TableInsertMeta(const char *name, uint32_t num_rows,
-                    std::vector<ColumnInsertMeta> col_meta)
+    TableInsertMeta(const char *name, uint32_t num_rows, std::vector<ColumnInsertMeta> col_meta)
         : name_(name), num_rows_(num_rows), col_meta_(std::move(col_meta)) {}
   };
 
   void FillTable(TableInfo *info, TableInsertMeta *table_meta);
 
-  auto MakeValues(ColumnInsertMeta *col_meta, uint32_t count)
-      -> std::vector<Value>;
+  auto MakeValues(ColumnInsertMeta *col_meta, uint32_t count) -> std::vector<Value>;
 
   template <typename CppType>
-  auto GenNumericValues(ColumnInsertMeta *col_meta, uint32_t count)
-      -> std::vector<Value>;
+  auto GenNumericValues(ColumnInsertMeta *col_meta, uint32_t count) -> std::vector<Value>;
 
-private:
+ private:
   ExecutorContext *exec_ctx_;
 };
-} // namespace bustub
+}  // namespace bustub

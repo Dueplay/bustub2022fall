@@ -18,10 +18,9 @@ class SelectStatement;
  * t1)` is `BoundSubqueryRef`.
  */
 class BoundSubqueryRef : public BoundTableRef {
-public:
-  explicit BoundSubqueryRef(
-      std::unique_ptr<SelectStatement> subquery,
-      std::vector<std::vector<std::string>> select_list_name, std::string alias)
+ public:
+  explicit BoundSubqueryRef(std::unique_ptr<SelectStatement> subquery,
+                            std::vector<std::vector<std::string>> select_list_name, std::string alias)
       : BoundTableRef(TableReferenceType::SUBQUERY),
         subquery_(std::move(subquery)),
         select_list_name_(std::move(select_list_name)),
@@ -41,4 +40,4 @@ public:
 
 using CTEList = std::vector<std::unique_ptr<BoundSubqueryRef>>;
 
-} // namespace bustub
+}  // namespace bustub

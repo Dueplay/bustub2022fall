@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <list>
 #include <memory>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
 #include <utility>
 #include <vector>
 
@@ -36,7 +36,7 @@ namespace bustub {
  */
 template <typename K, typename V>
 class ExtendibleHashTable : public HashTable<K, V> {
-public:
+ public:
   /**
    *
    * TODO(P1): Add implementation
@@ -116,7 +116,7 @@ public:
    * Bucket class for each hash table bucket that the directory points to.
    */
   class Bucket {
-  public:
+   public:
     explicit Bucket(size_t size, int depth = 0);
 
     /** @brief Check if a bucket is full. */
@@ -166,22 +166,22 @@ public:
     auto Insert(const K &key, const V &value) -> bool;
     std::list<std::pair<K, V>> list_;
 
-  private:
+   private:
     // TODO(student): You may add additional private members and helper
     // functions
     size_t size_;
     int depth_;
   };
 
-private:
+ private:
   // TODO(student): You may add additional private members and helper functions
   // and remove the ones you don't need.
 
-  int global_depth_;   // The global depth of the directory
-  size_t bucket_size_; // The size of a bucket
-  int num_buckets_;    // The number of buckets in the hash table
+  int global_depth_;    // The global depth of the directory
+  size_t bucket_size_;  // The size of a bucket
+  int num_buckets_;     // The number of buckets in the hash table
   mutable std::mutex latch_;
-  std::vector<std::shared_ptr<Bucket>> dir_; // The directory of the hash table
+  std::vector<std::shared_ptr<Bucket>> dir_;  // The directory of the hash table
 
   // The following functions are completely optional, you can delete them if you
   // have your own ideas.
@@ -190,8 +190,7 @@ private:
    * @brief Redistribute the kv pairs in a full bucket.
    * @param bucket The bucket to be redistributed.
    */
-  auto RedistributeBucket(std::shared_ptr<Bucket> bucket, int64_t index)
-      -> void;
+  auto RedistributeBucket(std::shared_ptr<Bucket> bucket, int64_t index) -> void;
 
   /*****************************************************************
    * Must acquire latch_ first before calling the below functions. *
@@ -210,4 +209,4 @@ private:
   auto GetNumBucketsInternal() const -> int;
 };
 
-} // namespace bustub
+}  // namespace bustub

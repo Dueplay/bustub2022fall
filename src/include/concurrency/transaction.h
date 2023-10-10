@@ -16,7 +16,7 @@
 #include <deque>
 #include <memory>
 #include <string>
-#include <thread> // NOLINT
+#include <thread>  // NOLINT
 #include <unordered_map>
 #include <unordered_set>
 
@@ -63,7 +63,7 @@ using index_oid_t = uint32_t;
  * WriteRecord tracks information related to a write.
  */
 class TableWriteRecord {
-public:
+ public:
   TableWriteRecord(RID rid, WType wtype, const Tuple &tuple, TableHeap *table)
       : rid_(rid), wtype_(wtype), tuple_(tuple), table_(table) {}
 
@@ -79,11 +79,10 @@ public:
  * WriteRecord tracks information related to a write.
  */
 class IndexWriteRecord {
-public:
-  IndexWriteRecord(RID rid, table_oid_t table_oid, WType wtype,
-                   const Tuple &tuple, index_oid_t index_oid, Catalog *catalog)
-      : rid_(rid), table_oid_(table_oid), wtype_(wtype), tuple_(tuple),
-        index_oid_(index_oid), catalog_(catalog) {}
+ public:
+  IndexWriteRecord(RID rid, table_oid_t table_oid, WType wtype, const Tuple &tuple, index_oid_t index_oid,
+                   Catalog *catalog)
+      : rid_(rid), table_oid_(table_oid), wtype_(wtype), tuple_(tuple), index_oid_(index_oid), catalog_(catalog) {}
 
   /** The rid is the value stored in the index. */
   RID rid_;
@@ -124,38 +123,33 @@ class TransactionAbortException : public std::exception {
   txn_id_t txn_id_;
   AbortReason abort_reason_;
 
-public:
+ public:
   explicit TransactionAbortException(txn_id_t txn_id, AbortReason abort_reason)
       : txn_id_(txn_id), abort_reason_(abort_reason) {}
   auto GetTransactionId() -> txn_id_t { return txn_id_; }
   auto GetAbortReason() -> AbortReason { return abort_reason_; }
   auto GetInfo() -> std::string {
     switch (abort_reason_) {
-    case AbortReason::LOCK_ON_SHRINKING:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because it can not take locks in the shrinking state\n";
-    case AbortReason::UPGRADE_CONFLICT:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because another transaction is already waiting to "
-             "upgrade its lock\n";
-    case AbortReason::LOCK_SHARED_ON_READ_UNCOMMITTED:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted on lockshared on READ_UNCOMMITTED\n";
-    case AbortReason::TABLE_LOCK_NOT_PRESENT:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because table lock not present\n";
-    case AbortReason::ATTEMPTED_INTENTION_LOCK_ON_ROW:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because intention lock attempted on row\n";
-    case AbortReason::TABLE_UNLOCKED_BEFORE_UNLOCKING_ROWS:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because table locks dropped before dropping row locks\n";
-    case AbortReason::INCOMPATIBLE_UPGRADE:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because attempted lock upgrade is incompatible\n";
-    case AbortReason::ATTEMPTED_UNLOCK_BUT_NO_LOCK_HELD:
-      return "Transaction " + std::to_string(txn_id_) +
-             " aborted because attempted to unlock but no lock held \n";
+      case AbortReason::LOCK_ON_SHRINKING:
+        return "Transaction " + std::to_string(txn_id_) +
+               " aborted because it can not take locks in the shrinking state\n";
+      case AbortReason::UPGRADE_CONFLICT:
+        return "Transaction " + std::to_string(txn_id_) +
+               " aborted because another transaction is already waiting to "
+               "upgrade its lock\n";
+      case AbortReason::LOCK_SHARED_ON_READ_UNCOMMITTED:
+        return "Transaction " + std::to_string(txn_id_) + " aborted on lockshared on READ_UNCOMMITTED\n";
+      case AbortReason::TABLE_LOCK_NOT_PRESENT:
+        return "Transaction " + std::to_string(txn_id_) + " aborted because table lock not present\n";
+      case AbortReason::ATTEMPTED_INTENTION_LOCK_ON_ROW:
+        return "Transaction " + std::to_string(txn_id_) + " aborted because intention lock attempted on row\n";
+      case AbortReason::TABLE_UNLOCKED_BEFORE_UNLOCKING_ROWS:
+        return "Transaction " + std::to_string(txn_id_) +
+               " aborted because table locks dropped before dropping row locks\n";
+      case AbortReason::INCOMPATIBLE_UPGRADE:
+        return "Transaction " + std::to_string(txn_id_) + " aborted because attempted lock upgrade is incompatible\n";
+      case AbortReason::ATTEMPTED_UNLOCK_BUT_NO_LOCK_HELD:
+        return "Transaction " + std::to_string(txn_id_) + " aborted because attempted to unlock but no lock held \n";
     }
     // Todo: Should fail with unreachable.
     return "";
@@ -166,22 +160,21 @@ public:
  * Transaction tracks information related to a transaction.
  */
 class Transaction {
-public:
-  explicit Transaction(txn_id_t txn_id, IsolationLevel isolation_level =
-                                            IsolationLevel::REPEATABLE_READ)
+ public:
+  explicit Transaction(txn_id_t txn_id, IsolationLevel isolation_level = IsolationLevel::REPEATABLE_READ)
       : isolation_level_(isolation_level),
-        thread_id_(std::this_thread::get_id()), txn_id_(txn_id),
-        prev_lsn_(INVALID_LSN), shared_lock_set_{new std::unordered_set<RID>},
+        thread_id_(std::this_thread::get_id()),
+        txn_id_(txn_id),
+        prev_lsn_(INVALID_LSN),
+        shared_lock_set_{new std::unordered_set<RID>},
         exclusive_lock_set_{new std::unordered_set<RID>},
         s_table_lock_set_{new std::unordered_set<table_oid_t>},
         x_table_lock_set_{new std::unordered_set<table_oid_t>},
         is_table_lock_set_{new std::unordered_set<table_oid_t>},
         ix_table_lock_set_{new std::unordered_set<table_oid_t>},
         six_table_lock_set_{new std::unordered_set<table_oid_t>},
-        s_row_lock_set_{
-            new std::unordered_map<table_oid_t, std::unordered_set<RID>>},
-        x_row_lock_set_{
-            new std::unordered_map<table_oid_t, std::unordered_set<RID>>} {
+        s_row_lock_set_{new std::unordered_map<table_oid_t, std::unordered_set<RID>>},
+        x_row_lock_set_{new std::unordered_map<table_oid_t, std::unordered_set<RID>>} {
     // Initialize the sets that will be tracked.
     table_write_set_ = std::make_shared<std::deque<TableWriteRecord>>();
     index_write_set_ = std::make_shared<std::deque<IndexWriteRecord>>();
@@ -200,25 +193,16 @@ public:
   inline auto GetTransactionId() const -> txn_id_t { return txn_id_; }
 
   /** @return the isolation level of this transaction */
-  inline auto GetIsolationLevel() const -> IsolationLevel {
-    return isolation_level_;
-  }
+  inline auto GetIsolationLevel() const -> IsolationLevel { return isolation_level_; }
 
   /** @return the list of table write records of this transaction */
-  inline auto GetWriteSet() -> std::shared_ptr<std::deque<TableWriteRecord>> {
-    return table_write_set_;
-  }
+  inline auto GetWriteSet() -> std::shared_ptr<std::deque<TableWriteRecord>> { return table_write_set_; }
 
   /** @return the list of index write records of this transaction */
-  inline auto GetIndexWriteSet()
-      -> std::shared_ptr<std::deque<IndexWriteRecord>> {
-    return index_write_set_;
-  }
+  inline auto GetIndexWriteSet() -> std::shared_ptr<std::deque<IndexWriteRecord>> { return index_write_set_; }
 
   /** @return the page set */
-  inline auto GetPageSet() -> std::shared_ptr<std::deque<Page *>> {
-    return page_set_;
-  }
+  inline auto GetPageSet() -> std::shared_ptr<std::deque<Page *>> { return page_set_; }
 
   /**
    * Adds a tuple write record into the table write set.
@@ -243,61 +227,42 @@ public:
   inline void AddIntoPageSet(Page *page) { page_set_->push_back(page); }
 
   /** @return the deleted page set */
-  inline auto GetDeletedPageSet()
-      -> std::shared_ptr<std::unordered_set<page_id_t>> {
-    return deleted_page_set_;
-  }
+  inline auto GetDeletedPageSet() -> std::shared_ptr<std::unordered_set<page_id_t>> { return deleted_page_set_; }
 
   /**
    * Adds a page to the deleted page set.
    * @param page_id id of the page to be marked as deleted
    */
-  inline void AddIntoDeletedPageSet(page_id_t page_id) {
-    deleted_page_set_->insert(page_id);
-  }
+  inline void AddIntoDeletedPageSet(page_id_t page_id) { deleted_page_set_->insert(page_id); }
 
   /** @return the set of resources under a shared lock */
-  inline auto GetSharedLockSet() -> std::shared_ptr<std::unordered_set<RID>> {
-    return shared_lock_set_;
-  }
+  inline auto GetSharedLockSet() -> std::shared_ptr<std::unordered_set<RID>> { return shared_lock_set_; }
 
   /** @return the set of rows under a shared lock */
-  inline auto GetSharedRowLockSet() -> std::shared_ptr<
-      std::unordered_map<table_oid_t, std::unordered_set<RID>>> {
+  inline auto GetSharedRowLockSet() -> std::shared_ptr<std::unordered_map<table_oid_t, std::unordered_set<RID>>> {
     return s_row_lock_set_;
   }
 
   /** @return the set of resources under an exclusive lock */
-  inline auto GetExclusiveLockSet()
-      -> std::shared_ptr<std::unordered_set<RID>> {
-    return exclusive_lock_set_;
-  }
+  inline auto GetExclusiveLockSet() -> std::shared_ptr<std::unordered_set<RID>> { return exclusive_lock_set_; }
 
   /** @return the set of rows in under an exclusive lock */
-  inline auto GetExclusiveRowLockSet() -> std::shared_ptr<
-      std::unordered_map<table_oid_t, std::unordered_set<RID>>> {
+  inline auto GetExclusiveRowLockSet() -> std::shared_ptr<std::unordered_map<table_oid_t, std::unordered_set<RID>>> {
     return x_row_lock_set_;
   }
 
   /** @return the set of resources under a shared lock */
-  inline auto GetSharedTableLockSet()
-      -> std::shared_ptr<std::unordered_set<table_oid_t>> {
-    return s_table_lock_set_;
-  }
-  inline auto GetExclusiveTableLockSet()
-      -> std::shared_ptr<std::unordered_set<table_oid_t>> {
+  inline auto GetSharedTableLockSet() -> std::shared_ptr<std::unordered_set<table_oid_t>> { return s_table_lock_set_; }
+  inline auto GetExclusiveTableLockSet() -> std::shared_ptr<std::unordered_set<table_oid_t>> {
     return x_table_lock_set_;
   }
-  inline auto GetIntentionSharedTableLockSet()
-      -> std::shared_ptr<std::unordered_set<table_oid_t>> {
+  inline auto GetIntentionSharedTableLockSet() -> std::shared_ptr<std::unordered_set<table_oid_t>> {
     return is_table_lock_set_;
   }
-  inline auto GetIntentionExclusiveTableLockSet()
-      -> std::shared_ptr<std::unordered_set<table_oid_t>> {
+  inline auto GetIntentionExclusiveTableLockSet() -> std::shared_ptr<std::unordered_set<table_oid_t>> {
     return ix_table_lock_set_;
   }
-  inline auto GetSharedIntentionExclusiveTableLockSet()
-      -> std::shared_ptr<std::unordered_set<table_oid_t>> {
+  inline auto GetSharedIntentionExclusiveTableLockSet() -> std::shared_ptr<std::unordered_set<table_oid_t>> {
     return six_table_lock_set_;
   }
 
@@ -363,7 +328,7 @@ public:
    */
   inline void SetPrevLSN(lsn_t prev_lsn) { prev_lsn_ = prev_lsn; }
 
-private:
+ private:
   /** The current transaction state. */
   TransactionState state_{TransactionState::GROWING};
   /** The isolation level of the transaction. */
@@ -401,10 +366,8 @@ private:
   std::shared_ptr<std::unordered_set<table_oid_t>> six_table_lock_set_;
 
   /** LockManager: the set of row locks held by this transaction. */
-  std::shared_ptr<std::unordered_map<table_oid_t, std::unordered_set<RID>>>
-      s_row_lock_set_;
-  std::shared_ptr<std::unordered_map<table_oid_t, std::unordered_set<RID>>>
-      x_row_lock_set_;
+  std::shared_ptr<std::unordered_map<table_oid_t, std::unordered_set<RID>>> s_row_lock_set_;
+  std::shared_ptr<std::unordered_map<table_oid_t, std::unordered_set<RID>>> x_row_lock_set_;
 };
 
-} // namespace bustub
+}  // namespace bustub

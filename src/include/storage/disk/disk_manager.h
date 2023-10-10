@@ -14,8 +14,8 @@
 
 #include <atomic>
 #include <fstream>
-#include <future> // NOLINT
-#include <mutex>  // NOLINT
+#include <future>  // NOLINT
+#include <mutex>   // NOLINT
 #include <string>
 
 #include "common/config.h"
@@ -29,7 +29,7 @@ namespace bustub {
  * system.
  */
 class DiskManager {
-public:
+ public:
   /**
    * Creates a new disk manager that writes to the specified database file.
    * @param db_file the file name of the database file to write to
@@ -94,7 +94,7 @@ public:
   /** Checks if the non-blocking flush future was set. */
   inline auto HasFlushLogFuture() -> bool { return flush_log_f_ != nullptr; }
 
-protected:
+ protected:
   auto GetFileSize(const std::string &file_name) -> int;
   // stream to write log file
   std::fstream log_io_;
@@ -110,4 +110,4 @@ protected:
   std::mutex db_io_latch_;
 };
 
-} // namespace bustub
+}  // namespace bustub

@@ -10,9 +10,9 @@
 //===----------------------------------------------------------------------===//
 #pragma once
 
-#include "storage/page/page.h"
 #include <cstring>
 #include <string>
+#include "storage/page/page.h"
 
 namespace bustub {
 
@@ -27,7 +27,7 @@ namespace bustub {
  *  -----------------------------------------------------------------
  */
 class HeaderPage : public Page {
-public:
+ public:
   void Init() { SetRecordCount(0); }
   /**
    * Record related
@@ -40,7 +40,7 @@ public:
   auto GetRootId(const std::string &name, page_id_t *root_id) -> bool;
   auto GetRecordCount() -> int;
 
-private:
+ private:
   /**
    * helper functions
    */
@@ -48,4 +48,4 @@ private:
 
   void SetRecordCount(int record_count);
 };
-} // namespace bustub
+}  // namespace bustub

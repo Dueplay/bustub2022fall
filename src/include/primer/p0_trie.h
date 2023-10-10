@@ -28,7 +28,7 @@ namespace bustub {
  * TrieNode is a generic container for any node in Trie.
  */
 class TrieNode {
-public:
+ public:
   /**
    * TODO(P0): Add implementation
    *
@@ -52,9 +52,9 @@ public:
     // move semantics to transfer the ownership of unique_ptr
     // from other_trie_node to current one
     // 将容器中存储的元素全部移动到其他容器中。make_move_iterator返回一个move_iterator，若此迭代器用作输入迭代器，则效果是值被移动，而非复制。
-    children_ = std::unordered_map<char, std::unique_ptr<TrieNode>>(
-        std::make_move_iterator(other_trie_node.children_.begin()),
-        std::make_move_iterator(other_trie_node.children_.end()));
+    children_ =
+        std::unordered_map<char, std::unique_ptr<TrieNode>>(std::make_move_iterator(other_trie_node.children_.begin()),
+                                                            std::make_move_iterator(other_trie_node.children_.end()));
     other_trie_node.children_.clear();
   }
 
@@ -71,9 +71,7 @@ public:
    * @param key_char Key char of child node.
    * @return True if this trie node has a child with given key, false otherwise.
    */
-  bool HasChild(char key_char) const {
-    return children_.find(key_char) != children_.end();
-  }
+  bool HasChild(char key_char) const { return children_.find(key_char) != children_.end(); }
 
   /**
    * TODO(P0): Add implementation
@@ -125,8 +123,7 @@ public:
    * @return Pointer to unique_ptr of the inserted child node. If insertion
    * fails, return nullptr.
    */
-  std::unique_ptr<TrieNode> *
-  InsertChildNode(char key_char, std::unique_ptr<TrieNode> &&child) {
+  std::unique_ptr<TrieNode> *InsertChildNode(char key_char, std::unique_ptr<TrieNode> &&child) {
     if (HasChild(key_char) || child->GetKeyChar() != key_char) {
       return nullptr;
     }
@@ -188,7 +185,7 @@ public:
    */
   void SetEndNode(bool is_end) { is_end_ = is_end; }
 
-protected:
+ protected:
   /** Key character of this trie node */
   char key_char_;
   /** whether this node marks the end of a key */
@@ -202,12 +199,13 @@ protected:
  * TrieNodeWithValue is a node that marks the ending of a key, and it can
  * hold a value of any type T.
  */
-template <typename T> class TrieNodeWithValue : public TrieNode {
-private:
+template <typename T>
+class TrieNodeWithValue : public TrieNode {
+ private:
   /* Value held by this trie node. */
   T value_;
 
-public:
+ public:
   /**
    * TODO(P0): Add implementation
    *
@@ -228,10 +226,7 @@ public:
    * @param trieNode TrieNode whose data is to be moved to TrieNodeWithValue
    * @param value
    */
-  TrieNodeWithValue(TrieNode &&trieNode, T value)
-      : TrieNode(std::move(trieNode)), value_(value) {
-    is_end_ = true;
-  }
+  TrieNodeWithValue(TrieNode &&trieNode, T value) : TrieNode(std::move(trieNode)), value_(value) { is_end_ = true; }
 
   /**
    * TODO(P0): Add implementation
@@ -247,10 +242,7 @@ public:
    * @param key_char Key char of this node
    * @param value Value of this node
    */
-  TrieNodeWithValue(char key_char, T value)
-      : TrieNode(key_char), value_(value) {
-    is_end_ = true;
-  }
+  TrieNodeWithValue(char key_char, T value) : TrieNode(key_char), value_(value) { is_end_ = true; }
 
   /**
    * @brief Destroy the Trie Node With Value object
@@ -270,7 +262,7 @@ public:
  * corresponding value can be any type.
  */
 class Trie {
-private:
+ private:
   /* Root node of the trie */
   std::unique_ptr<TrieNode> root_;
   /* Read-write lock for the trie */
@@ -297,7 +289,7 @@ private:
     return curr_node;
   }
 
-public:
+ public:
   /**
    * TODO(P0): Add implementation
    *
@@ -333,7 +325,8 @@ public:
    * @param value Value to be inserted
    * @return True if insertion succeeds, false if the key already exists
    */
-  template <typename T> bool Insert(const std::string &key, T value) {
+  template <typename T>
+  bool Insert(const std::string &key, T value) {
     if (key.empty()) {
       return false;
     }
@@ -347,16 +340,14 @@ public:
     auto terminal_node = (*curr_node)->GetChildNode(terminal_key);
     if (terminal_node == nullptr) {
       // case 1: create new terminal TrieNode
-      auto terminal_child =
-          std::make_unique<TrieNodeWithValue<T>>(terminal_key, value);
+      auto terminal_child = std::make_unique<TrieNodeWithValue<T>>(terminal_key, value);
       (*curr_node)->InsertChildNode(terminal_key, std::move(terminal_child));
       latch_.WUnlock();
       return true;
     }
     if (!(*terminal_node)->IsEndNode()) {
       // case 2 convert TrieNode into TrieNodeWithValue
-      auto converted_node = std::make_unique<TrieNodeWithValue<T>>(
-          std::move(*(*terminal_node)), value);
+      auto converted_node = std::make_unique<TrieNodeWithValue<T>>(std::move(*(*terminal_node)), value);
       (*curr_node)->RemoveChildNode(terminal_key);
       (*curr_node)->InsertChildNode(terminal_key, std::move(converted_node));
       latch_.WUnlock();
@@ -439,7 +430,8 @@ public:
    * @param success Whether GetValue is successful or not
    * @return Value of type T if type matches
    */
-  template <typename T> T GetValue(const std::string &key, bool *success) {
+  template <typename T>
+  T GetValue(const std::string &key, bool *success) {
     latch_.RLock();
     *success = false;
     auto terminal_node = Find(key);
@@ -459,4 +451,4 @@ public:
     return casted_node->GetValue();
   }
 };
-} // namespace bustub
+}  // namespace bustub

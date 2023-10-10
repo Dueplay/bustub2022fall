@@ -13,10 +13,10 @@
 #pragma once
 
 #include <algorithm>
-#include <condition_variable> // NOLINT
+#include <condition_variable>  // NOLINT
 #include <list>
 #include <memory>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -34,14 +34,8 @@ class TransactionManager;
  * LockManager handles transactions asking for locks on records.
  */
 class LockManager {
-public:
-  enum class LockMode {
-    SHARED,
-    EXCLUSIVE,
-    INTENTION_SHARED,
-    INTENTION_EXCLUSIVE,
-    SHARED_INTENTION_EXCLUSIVE
-  };
+ public:
+  enum class LockMode { SHARED, EXCLUSIVE, INTENTION_SHARED, INTENTION_EXCLUSIVE, SHARED_INTENTION_EXCLUSIVE };
 
   /**
    * Structure to hold a lock request.
@@ -49,12 +43,10 @@ public:
    * For table lock requests, the rid_ attribute would be unused.
    */
   class LockRequest {
-  public:
-    LockRequest(txn_id_t txn_id, LockMode lock_mode,
-                table_oid_t oid) /** Table lock request */
+   public:
+    LockRequest(txn_id_t txn_id, LockMode lock_mode, table_oid_t oid) /** Table lock request */
         : txn_id_(txn_id), lock_mode_(lock_mode), oid_(oid) {}
-    LockRequest(txn_id_t txn_id, LockMode lock_mode, table_oid_t oid,
-                RID rid) /** Row lock request */
+    LockRequest(txn_id_t txn_id, LockMode lock_mode, table_oid_t oid, RID rid) /** Row lock request */
         : txn_id_(txn_id), lock_mode_(lock_mode), oid_(oid), rid_(rid) {}
 
     /** Txn_id of the txn requesting the lock */
@@ -71,7 +63,7 @@ public:
   };
 
   class LockRequestQueue {
-  public:
+   public:
     /** List of lock requests for the same resource (table or row) */
     std::list<LockRequest *> request_queue_;
     /** For notifying blocked transactions on this rid */
@@ -87,8 +79,7 @@ public:
    */
   LockManager() {
     enable_cycle_detection_ = true;
-    cycle_detection_thread_ =
-        new std::thread(&LockManager::RunCycleDetection, this);
+    cycle_detection_thread_ = new std::thread(&LockManager::RunCycleDetection, this);
   }
 
   ~LockManager() {
@@ -245,8 +236,7 @@ public:
    * @param oid the table_oid_t of the table to be locked in lock_mode
    * @return true if the upgrade is successful, false otherwise
    */
-  auto LockTable(Transaction *txn, LockMode lock_mode,
-                 const table_oid_t &oid) noexcept(false) -> bool;
+  auto LockTable(Transaction *txn, LockMode lock_mode, const table_oid_t &oid) noexcept(false) -> bool;
 
   /**
    * Release the lock held on a table by the transaction.
@@ -276,8 +266,7 @@ public:
    * @param rid the RID of the row to be locked
    * @return true if the upgrade is successful, false otherwise
    */
-  auto LockRow(Transaction *txn, LockMode lock_mode, const table_oid_t &oid,
-               const RID &rid) -> bool;
+  auto LockRow(Transaction *txn, LockMode lock_mode, const table_oid_t &oid, const RID &rid) -> bool;
 
   /**
    * Release the lock held on a row by the transaction.
@@ -292,8 +281,7 @@ public:
    * @param rid the RID of the row to be unlocked
    * @return true if the unlock is successful, false otherwise
    */
-  auto UnlockRow(Transaction *txn, const table_oid_t &oid, const RID &rid)
-      -> bool;
+  auto UnlockRow(Transaction *txn, const table_oid_t &oid, const RID &rid) -> bool;
 
   /*** Graph API ***/
 
@@ -331,11 +319,10 @@ public:
    */
   auto RunCycleDetection() -> void;
 
-private:
+ private:
   /** Fall 2022 */
   /** Structure that holds lock requests for a given table oid */
-  std::unordered_map<table_oid_t, std::shared_ptr<LockRequestQueue>>
-      table_lock_map_;
+  std::unordered_map<table_oid_t, std::shared_ptr<LockRequestQueue>> table_lock_map_;
   /** Coordination */
   std::mutex table_lock_map_latch_;
 
@@ -351,4 +338,4 @@ private:
   std::mutex waits_for_latch_;
 };
 
-} // namespace bustub
+}  // namespace bustub

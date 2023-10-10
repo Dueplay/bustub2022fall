@@ -31,7 +31,7 @@ class Page {
   // relevant to the buffer pool manager.
   friend class BufferPoolManagerInstance;
 
-public:
+ public:
   /** Constructor. Zeros out the page data. */
   Page() { ResetMemory(); }
 
@@ -64,16 +64,12 @@ public:
   inline void RUnlatch() { rwlatch_.RUnlock(); }
 
   /** @return the page LSN. */
-  inline auto GetLSN() -> lsn_t {
-    return *reinterpret_cast<lsn_t *>(GetData() + OFFSET_LSN);
-  }
+  inline auto GetLSN() -> lsn_t { return *reinterpret_cast<lsn_t *>(GetData() + OFFSET_LSN); }
 
   /** Sets the page LSN. */
-  inline void SetLSN(lsn_t lsn) {
-    memcpy(GetData() + OFFSET_LSN, &lsn, sizeof(lsn_t));
-  }
+  inline void SetLSN(lsn_t lsn) { memcpy(GetData() + OFFSET_LSN, &lsn, sizeof(lsn_t)); }
 
-protected:
+ protected:
   static_assert(sizeof(page_id_t) == 4);
   static_assert(sizeof(lsn_t) == 4);
 
@@ -81,11 +77,9 @@ protected:
   static constexpr size_t OFFSET_PAGE_START = 0;
   static constexpr size_t OFFSET_LSN = 4;
 
-private:
+ private:
   /** Zeroes out the data that is held within the page. */
-  inline void ResetMemory() {
-    memset(data_, OFFSET_PAGE_START, BUSTUB_PAGE_SIZE);
-  }
+  inline void ResetMemory() { memset(data_, OFFSET_PAGE_START, BUSTUB_PAGE_SIZE); }
 
   /** The actual data that is stored within a page. */
   char data_[BUSTUB_PAGE_SIZE]{};
@@ -100,4 +94,4 @@ private:
   ReaderWriterLatch rwlatch_;
 };
 
-} // namespace bustub
+}  // namespace bustub

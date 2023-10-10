@@ -24,8 +24,7 @@
 
 namespace bustub {
 
-#define HASH_TABLE_TYPE                                                        \
-  DiskExtendibleHashTable<KeyType, ValueType, KeyComparator>
+#define HASH_TABLE_TYPE DiskExtendibleHashTable<KeyType, ValueType, KeyComparator>
 
 /**
  * Implementation of extendible hash table that is backed by a buffer pool
@@ -34,7 +33,7 @@ namespace bustub {
  */
 template <typename KeyType, typename ValueType, typename KeyComparator>
 class DiskExtendibleHashTable {
-public:
+ public:
   /**
    * Creates a new DiskExtendibleHashTable.
    *
@@ -42,10 +41,8 @@ public:
    * @param comparator comparator for keys
    * @param hash_fn the hash function
    */
-  explicit DiskExtendibleHashTable(const std::string &name,
-                                   BufferPoolManager *buffer_pool_manager,
-                                   const KeyComparator &comparator,
-                                   HashFunction<KeyType> hash_fn);
+  explicit DiskExtendibleHashTable(const std::string &name, BufferPoolManager *buffer_pool_manager,
+                                   const KeyComparator &comparator, HashFunction<KeyType> hash_fn);
 
   /**
    * Inserts a key-value pair into the hash table.
@@ -55,8 +52,7 @@ public:
    * @param value the value to be associated with the key
    * @return true if insert succeeded, false otherwise
    */
-  auto Insert(Transaction *transaction, const KeyType &key,
-              const ValueType &value) -> bool;
+  auto Insert(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool;
 
   /**
    * Deletes the associated value for the given key.
@@ -66,8 +62,7 @@ public:
    * @param value the value to delete
    * @return true if remove succeeded, false otherwise
    */
-  auto Remove(Transaction *transaction, const KeyType &key,
-              const ValueType &value) -> bool;
+  auto Remove(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool;
 
   /**
    * Performs a point query on the hash table.
@@ -77,8 +72,7 @@ public:
    * @param[out] result the value(s) associated with a given key
    * @return the value(s) associated with the given key
    */
-  auto GetValue(Transaction *transaction, const KeyType &key,
-                std::vector<ValueType> *result) -> bool;
+  auto GetValue(Transaction *transaction, const KeyType &key, std::vector<ValueType> *result) -> bool;
 
   /**
    * Returns the global depth
@@ -91,7 +85,7 @@ public:
    */
   void VerifyIntegrity();
 
-private:
+ private:
   /**
    * Hash - simple helper to downcast MurmurHash's 64-bit hash to 32-bit
    * for extendible hashing.
@@ -117,8 +111,7 @@ private:
    * @param dir_page to use for lookup of global depth
    * @return the directory index
    */
-  auto KeyToDirectoryIndex(KeyType key, HashTableDirectoryPage *dir_page)
-      -> uint32_t;
+  auto KeyToDirectoryIndex(KeyType key, HashTableDirectoryPage *dir_page) -> uint32_t;
 
   /**
    * Get the bucket page_id corresponding to a key.
@@ -153,8 +146,7 @@ private:
    * @param value the value to insert
    * @return whether or not the insertion was successful
    */
-  auto SplitInsert(Transaction *transaction, const KeyType &key,
-                   const ValueType &value) -> bool;
+  auto SplitInsert(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool;
 
   /**
    * Optionally merges an empty bucket into it's pair.  This is called by
@@ -169,8 +161,7 @@ private:
    * @param key the key that was removed
    * @param value the value that was removed
    */
-  void Merge(Transaction *transaction, const KeyType &key,
-             const ValueType &value);
+  void Merge(Transaction *transaction, const KeyType &key, const ValueType &value);
 
   // member variables
   page_id_t directory_page_id_;
@@ -182,4 +173,4 @@ private:
   HashFunction<KeyType> hash_fn_;
 };
 
-} // namespace bustub
+}  // namespace bustub

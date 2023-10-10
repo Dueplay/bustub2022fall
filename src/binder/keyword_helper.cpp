@@ -27,9 +27,7 @@
 
 namespace bustub {
 
-auto KeywordHelper::IsKeyword(const std::string &text) -> bool {
-  return Binder::IsKeyword(text);
-}
+auto KeywordHelper::IsKeyword(const std::string &text) -> bool { return Binder::IsKeyword(text); }
 
 auto KeywordHelper::RequiresQuotes(const std::string &text) -> bool {
   for (size_t i = 0; i < text.size(); i++) {
@@ -47,15 +45,12 @@ auto KeywordHelper::RequiresQuotes(const std::string &text) -> bool {
   return IsKeyword(text);
 }
 
-auto KeywordHelper::WriteOptionallyQuoted(const std::string &text, char quote)
-    -> std::string {
+auto KeywordHelper::WriteOptionallyQuoted(const std::string &text, char quote) -> std::string {
   if (!RequiresQuotes(text)) {
     return text;
   }
-  return std::string(1, quote) +
-         StringUtil::Replace(text, std::string(1, quote),
-                             std::string(2, quote)) +
+  return std::string(1, quote) + StringUtil::Replace(text, std::string(1, quote), std::string(2, quote)) +
          std::string(1, quote);
 }
 
-} // namespace bustub
+}  // namespace bustub

@@ -22,7 +22,7 @@ namespace bustub {
  * followed by Data.
  */
 class TmpTuplePage : public Page {
-public:
+ public:
   void Init(page_id_t page_id, uint32_t page_size) {
     memcpy(GetData(), &page_id, sizeof(page_id_t));
     memcpy(GetData() + sizeof(page_id_t), &page_size, sizeof(uint32_t));
@@ -32,8 +32,8 @@ public:
 
   auto Insert(const Tuple &tuple, TmpTuple *out) -> bool { return false; }
 
-private:
+ private:
   static_assert(sizeof(page_id_t) == 4);
 };
 
-} // namespace bustub
+}  // namespace bustub

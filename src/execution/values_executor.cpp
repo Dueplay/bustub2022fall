@@ -2,8 +2,7 @@
 
 namespace bustub {
 
-ValuesExecutor::ValuesExecutor(ExecutorContext *exec_ctx,
-                               const ValuesPlanNode *plan)
+ValuesExecutor::ValuesExecutor(ExecutorContext *exec_ctx, const ValuesPlanNode *plan)
     : AbstractExecutor(exec_ctx), plan_(plan), dummy_schema_(Schema({})) {}
 
 void ValuesExecutor::Init() { cursor_ = 0; }
@@ -27,4 +26,4 @@ auto ValuesExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   return true;
 }
 
-} // namespace bustub
+}  // namespace bustub

@@ -12,9 +12,9 @@
 #include <array>
 #include <cstring>
 #include <fstream>
-#include <future> // NOLINT
+#include <future>  // NOLINT
 #include <memory>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
 #include <optional>
 #include <shared_mutex>
 #include <string>
@@ -33,7 +33,7 @@ namespace bustub {
  * primarily used for data structure performance testing.
  */
 class DiskManagerMemory : public DiskManager {
-public:
+ public:
   explicit DiskManagerMemory(size_t pages);
 
   ~DiskManagerMemory() override { delete[] memory_; }
@@ -52,7 +52,7 @@ public:
    */
   void ReadPage(page_id_t page_id, char *page_data) override;
 
-private:
+ private:
   char *memory_;
 };
 
@@ -61,7 +61,7 @@ private:
  * primarily used for data structure performance testing.
  */
 class DiskManagerUnlimitedMemory : public DiskManager {
-public:
+ public:
   DiskManagerUnlimitedMemory() = default;
 
   /**
@@ -106,11 +106,11 @@ public:
     memcpy(page_data, ptr->first.data(), BUSTUB_PAGE_SIZE);
   }
 
-private:
+ private:
   std::mutex mutex_;
   using Page = std::array<char, BUSTUB_PAGE_SIZE>;
   using ProtectedPage = std::pair<Page, std::shared_mutex>;
   std::vector<std::shared_ptr<ProtectedPage>> data_;
 };
 
-} // namespace bustub
+}  // namespace bustub

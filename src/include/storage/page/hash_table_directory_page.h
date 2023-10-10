@@ -33,7 +33,7 @@ namespace bustub {
  * --------------------------------------------------------------------------------------------
  */
 class HashTableDirectoryPage {
-public:
+ public:
   /**
    * @return the page ID of this page
    */
@@ -188,7 +188,7 @@ public:
    */
   void PrintDirectory();
 
-private:
+ private:
   page_id_t page_id_;
   lsn_t lsn_;
   uint32_t global_depth_{0};
@@ -196,4 +196,4 @@ private:
   page_id_t bucket_page_ids_[DIRECTORY_ARRAY_SIZE];
 };
 
-} // namespace bustub
+}  // namespace bustub

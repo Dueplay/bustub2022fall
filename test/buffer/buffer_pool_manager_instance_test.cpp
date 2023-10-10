@@ -54,8 +54,7 @@ TEST(BufferPoolManagerInstanceTest, DISABLED_BinaryDataTest) {
 
   // Scenario: Once we have a page, we should be able to read and write content.
   std::memcpy(page0->GetData(), random_binary_data, BUSTUB_PAGE_SIZE);
-  EXPECT_EQ(
-      0, std::memcmp(page0->GetData(), random_binary_data, BUSTUB_PAGE_SIZE));
+  EXPECT_EQ(0, std::memcmp(page0->GetData(), random_binary_data, BUSTUB_PAGE_SIZE));
 
   // Scenario: We should be able to create new pages until we fill up the buffer
   // pool.
@@ -151,4 +150,4 @@ TEST(BufferPoolManagerInstanceTest, DISABLED_SampleTest) {
   delete disk_manager;
 }
 
-} // namespace bustub
+}  // namespace bustub

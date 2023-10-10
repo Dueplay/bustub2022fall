@@ -26,4 +26,4 @@ void CheckpointManager::EndCheckpoint() {
   // Allow transactions to resume, completing the checkpoint.
 }
 
-} // namespace bustub
+}  // namespace bustub

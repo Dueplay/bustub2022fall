@@ -7,10 +7,10 @@
 
 #pragma once
 
-#include "binder/bound_statement.h"
 #include <memory>
 #include <string>
 #include <vector>
+#include "binder/bound_statement.h"
 
 enum ExplainOptions : uint8_t {
   INVALID = 0,   /**< Default explain mode */
@@ -23,9 +23,8 @@ enum ExplainOptions : uint8_t {
 namespace bustub {
 
 class ExplainStatement : public BoundStatement {
-public:
-  explicit ExplainStatement(std::unique_ptr<BoundStatement> statement,
-                            uint8_t options);
+ public:
+  explicit ExplainStatement(std::unique_ptr<BoundStatement> statement, uint8_t options);
 
   std::unique_ptr<BoundStatement> statement_;
 
@@ -34,4 +33,4 @@ public:
   uint8_t options_;
 };
 
-} // namespace bustub
+}  // namespace bustub

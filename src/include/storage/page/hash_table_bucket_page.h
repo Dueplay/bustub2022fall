@@ -37,7 +37,7 @@ namespace bustub {
  */
 template <typename KeyType, typename ValueType, typename KeyComparator>
 class HashTableBucketPage {
-public:
+ public:
   // Delete all constructor / destructor to ensure memory safety
   HashTableBucketPage() = delete;
 
@@ -46,8 +46,7 @@ public:
    *
    * @return true if at least one key matched
    */
-  auto GetValue(KeyType key, KeyComparator cmp, std::vector<ValueType> *result)
-      -> bool;
+  auto GetValue(KeyType key, KeyComparator cmp, std::vector<ValueType> *result) -> bool;
 
   /**
    * Attempts to insert a key and value in the bucket.  Uses the occupied_
@@ -139,7 +138,7 @@ public:
    */
   void PrintBucket();
 
-private:
+ private:
   //  For more on BUCKET_ARRAY_SIZE see storage/page/hash_table_page_defs.h
   char occupied_[(BUCKET_ARRAY_SIZE - 1) / 8 + 1];
   // 0 if tombstone/brand new (never occupied), 1 otherwise.
@@ -148,4 +147,4 @@ private:
   MappingType array_[1];
 };
 
-} // namespace bustub
+}  // namespace bustub

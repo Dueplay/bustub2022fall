@@ -22,8 +22,7 @@ namespace bustub {
 
 #define MappingType std::pair<KeyType, ValueType>
 
-#define INDEX_TEMPLATE_ARGUMENTS                                               \
-  template <typename KeyType, typename ValueType, typename KeyComparator>
+#define INDEX_TEMPLATE_ARGUMENTS template <typename KeyType, typename ValueType, typename KeyComparator>
 
 // define page type enum
 enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
@@ -42,7 +41,7 @@ enum class IndexPageType { INVALID_INDEX_PAGE = 0, LEAF_PAGE, INTERNAL_PAGE };
  * ----------------------------------------------------------------------------
  */
 class BPlusTreePage {
-public:
+ public:
   auto IsLeafPage() const -> bool;
   auto IsRootPage() const -> bool;
   void SetPageType(IndexPageType page_type);
@@ -63,7 +62,7 @@ public:
 
   void SetLSN(lsn_t lsn = INVALID_LSN);
 
-private:
+ private:
   // member variable, attributes that both internal and leaf page share
   IndexPageType page_type_ __attribute__((__unused__));
   lsn_t lsn_ __attribute__((__unused__));
@@ -73,4 +72,4 @@ private:
   page_id_t page_id_ __attribute__((__unused__));
 };
 
-} // namespace bustub
+}  // namespace bustub

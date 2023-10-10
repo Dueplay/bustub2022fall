@@ -26,7 +26,7 @@ namespace bustub {
  * NestedLoopJoinExecutor executes a nested-loop JOIN on two tables.
  */
 class NestedLoopJoinExecutor : public AbstractExecutor {
-public:
+ public:
   /**
    * Construct a new NestedLoopJoinExecutor instance.
    * @param exec_ctx The executor context
@@ -36,8 +36,7 @@ public:
    * @param right_executor The child executor that produces tuple for the right
    * side of join
    */
-  NestedLoopJoinExecutor(ExecutorContext *exec_ctx,
-                         const NestedLoopJoinPlanNode *plan,
+  NestedLoopJoinExecutor(ExecutorContext *exec_ctx, const NestedLoopJoinPlanNode *plan,
                          std::unique_ptr<AbstractExecutor> &&left_executor,
                          std::unique_ptr<AbstractExecutor> &&right_executor);
 
@@ -54,13 +53,11 @@ public:
   auto Next(Tuple *tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the insert */
-  auto GetOutputSchema() const -> const Schema & override {
-    return plan_->OutputSchema();
-  };
+  auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
-private:
+ private:
   /** The NestedLoopJoin plan node to be executed. */
   const NestedLoopJoinPlanNode *plan_;
 };
 
-} // namespace bustub
+}  // namespace bustub

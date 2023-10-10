@@ -38,25 +38,21 @@ class BPlusTree {
   using InternalPage = BPlusTreeInternalPage<KeyType, page_id_t, KeyComparator>;
   using LeafPage = BPlusTreeLeafPage<KeyType, ValueType, KeyComparator>;
 
-public:
-  explicit BPlusTree(std::string name, BufferPoolManager *buffer_pool_manager,
-                     const KeyComparator &comparator,
-                     int leaf_max_size = LEAF_PAGE_SIZE,
-                     int internal_max_size = INTERNAL_PAGE_SIZE);
+ public:
+  explicit BPlusTree(std::string name, BufferPoolManager *buffer_pool_manager, const KeyComparator &comparator,
+                     int leaf_max_size = LEAF_PAGE_SIZE, int internal_max_size = INTERNAL_PAGE_SIZE);
 
   // Returns true if this B+ tree has no keys and values.
   auto IsEmpty() const -> bool;
 
   // Insert a key-value pair into this B+ tree.
-  auto Insert(const KeyType &key, const ValueType &value,
-              Transaction *transaction = nullptr) -> bool;
+  auto Insert(const KeyType &key, const ValueType &value, Transaction *transaction = nullptr) -> bool;
 
   // Remove a key and its value from this B+ tree.
   void Remove(const KeyType &key, Transaction *transaction = nullptr);
 
   // return the value associated with a given key
-  auto GetValue(const KeyType &key, std::vector<ValueType> *result,
-                Transaction *transaction = nullptr) -> bool;
+  auto GetValue(const KeyType &key, std::vector<ValueType> *result, Transaction *transaction = nullptr) -> bool;
 
   // return the page id of the root node
   auto GetRootPageId() -> page_id_t;
@@ -73,19 +69,16 @@ public:
   void Draw(BufferPoolManager *bpm, const std::string &outf);
 
   // read data from file and insert one by one
-  void InsertFromFile(const std::string &file_name,
-                      Transaction *transaction = nullptr);
+  void InsertFromFile(const std::string &file_name, Transaction *transaction = nullptr);
 
   // read data from file and remove one by one
-  void RemoveFromFile(const std::string &file_name,
-                      Transaction *transaction = nullptr);
+  void RemoveFromFile(const std::string &file_name, Transaction *transaction = nullptr);
 
-private:
+ private:
   void UpdateRootPageId(int insert_record = 0);
 
   /* Debug Routines for FREE!! */
-  void ToGraph(BPlusTreePage *page, BufferPoolManager *bpm,
-               std::ofstream &out) const;
+  void ToGraph(BPlusTreePage *page, BufferPoolManager *bpm, std::ofstream &out) const;
 
   void ToString(BPlusTreePage *page, BufferPoolManager *bpm) const;
 
@@ -98,4 +91,4 @@ private:
   int internal_max_size_;
 };
 
-} // namespace bustub
+}  // namespace bustub

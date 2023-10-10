@@ -21,9 +21,8 @@ namespace bustub {
 class SelectStatement;
 
 class InsertStatement : public BoundStatement {
-public:
-  explicit InsertStatement(std::unique_ptr<BoundBaseTableRef> table,
-                           std::unique_ptr<SelectStatement> select);
+ public:
+  explicit InsertStatement(std::unique_ptr<BoundBaseTableRef> table, std::unique_ptr<SelectStatement> select);
 
   std::unique_ptr<BoundBaseTableRef> table_;
 
@@ -32,4 +31,4 @@ public:
   auto ToString() const -> std::string override;
 };
 
-} // namespace bustub
+}  // namespace bustub

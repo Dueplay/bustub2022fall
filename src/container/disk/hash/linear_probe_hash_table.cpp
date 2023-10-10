@@ -23,28 +23,23 @@
 namespace bustub {
 
 template <typename KeyType, typename ValueType, typename KeyComparator>
-HASH_TABLE_TYPE::LinearProbeHashTable(const std::string &name,
-                                      BufferPoolManager *buffer_pool_manager,
-                                      const KeyComparator &comparator,
-                                      size_t num_buckets,
+HASH_TABLE_TYPE::LinearProbeHashTable(const std::string &name, BufferPoolManager *buffer_pool_manager,
+                                      const KeyComparator &comparator, size_t num_buckets,
                                       HashFunction<KeyType> hash_fn)
-    : buffer_pool_manager_(buffer_pool_manager), comparator_(comparator),
-      hash_fn_(std::move(hash_fn)) {}
+    : buffer_pool_manager_(buffer_pool_manager), comparator_(comparator), hash_fn_(std::move(hash_fn)) {}
 
 /*****************************************************************************
  * SEARCH
  *****************************************************************************/
 template <typename KeyType, typename ValueType, typename KeyComparator>
-auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key,
-                               std::vector<ValueType> *result) -> bool {
+auto HASH_TABLE_TYPE::GetValue(Transaction *transaction, const KeyType &key, std::vector<ValueType> *result) -> bool {
   return false;
 }
 /*****************************************************************************
  * INSERTION
  *****************************************************************************/
 template <typename KeyType, typename ValueType, typename KeyComparator>
-auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key,
-                             const ValueType &value) -> bool {
+auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool {
   return false;
 }
 
@@ -52,8 +47,7 @@ auto HASH_TABLE_TYPE::Insert(Transaction *transaction, const KeyType &key,
  * REMOVE
  *****************************************************************************/
 template <typename KeyType, typename ValueType, typename KeyComparator>
-auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key,
-                             const ValueType &value) -> bool {
+auto HASH_TABLE_TYPE::Remove(Transaction *transaction, const KeyType &key, const ValueType &value) -> bool {
   return false;
 }
 
@@ -79,4 +73,4 @@ template class LinearProbeHashTable<GenericKey<16>, RID, GenericComparator<16>>;
 template class LinearProbeHashTable<GenericKey<32>, RID, GenericComparator<32>>;
 template class LinearProbeHashTable<GenericKey<64>, RID, GenericComparator<64>>;
 
-} // namespace bustub
+}  // namespace bustub

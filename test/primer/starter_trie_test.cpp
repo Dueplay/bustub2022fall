@@ -14,11 +14,11 @@
 #include <functional>
 #include <numeric>
 #include <random>
-#include <thread> // NOLINT
+#include <thread>  // NOLINT
 
 #include "common/exception.h"
-#include "primer/p0_trie.h"
 #include "gtest/gtest.h"
+#include "primer/p0_trie.h"
 
 namespace bustub {
 
@@ -68,8 +68,7 @@ TEST(StarterTest, TrieNodeInsertTest) {
 
 TEST(StarterTest, TrieNodeRemoveTest) {
   auto t = TrieNode('a');
-  __attribute__((unused)) auto child_node =
-      t.InsertChildNode('b', std::make_unique<TrieNode>('b'));
+  __attribute__((unused)) auto child_node = t.InsertChildNode('b', std::make_unique<TrieNode>('b'));
   child_node = t.InsertChildNode('c', std::make_unique<TrieNode>('c'));
 
   t.RemoveChildNode('b');
@@ -206,4 +205,4 @@ TEST(StarterTrieTest, ConcurrentTest1) {
   threads.clear();
 }
 
-} // namespace bustub
+}  // namespace bustub

@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 #include <cstdio>
-#include <thread> // NOLINT
+#include <thread>  // NOLINT
 #include <vector>
 
 #include "buffer/lru_replacer.h"
@@ -60,4 +60,4 @@ TEST(LRUReplacerTest, DISABLED_SampleTest) {
   EXPECT_EQ(4, value);
 }
 
-} // namespace bustub
+}  // namespace bustub

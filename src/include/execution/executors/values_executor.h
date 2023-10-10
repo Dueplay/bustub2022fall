@@ -26,7 +26,7 @@ namespace bustub {
  * The ValuesExecutor executor produces rows of values.
  */
 class ValuesExecutor : public AbstractExecutor {
-public:
+ public:
   /**
    * Construct a new ValuesExecutor instance.
    * @param exec_ctx The executor context
@@ -47,11 +47,9 @@ public:
   auto Next(Tuple *tuple, RID *rid) -> bool override;
 
   /** @return The output schema for the values */
-  auto GetOutputSchema() const -> const Schema & override {
-    return plan_->OutputSchema();
-  }
+  auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); }
 
-private:
+ private:
   /** The values plan node to be executed */
   const ValuesPlanNode *plan_;
 
@@ -59,4 +57,4 @@ private:
 
   size_t cursor_{0};
 };
-} // namespace bustub
+}  // namespace bustub

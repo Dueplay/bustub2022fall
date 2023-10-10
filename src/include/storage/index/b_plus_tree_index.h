@@ -26,18 +26,14 @@ namespace bustub {
 
 INDEX_TEMPLATE_ARGUMENTS
 class BPlusTreeIndex : public Index {
-public:
-  BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata,
-                 BufferPoolManager *buffer_pool_manager);
+ public:
+  BPlusTreeIndex(std::unique_ptr<IndexMetadata> &&metadata, BufferPoolManager *buffer_pool_manager);
 
-  void InsertEntry(const Tuple &key, RID rid,
-                   Transaction *transaction) override;
+  void InsertEntry(const Tuple &key, RID rid, Transaction *transaction) override;
 
-  void DeleteEntry(const Tuple &key, RID rid,
-                   Transaction *transaction) override;
+  void DeleteEntry(const Tuple &key, RID rid, Transaction *transaction) override;
 
-  void ScanKey(const Tuple &key, std::vector<RID> *result,
-               Transaction *transaction) override;
+  void ScanKey(const Tuple &key, std::vector<RID> *result, Transaction *transaction) override;
 
   auto GetBeginIterator() -> INDEXITERATOR_TYPE;
 
@@ -45,7 +41,7 @@ public:
 
   auto GetEndIterator() -> INDEXITERATOR_TYPE;
 
-protected:
+ protected:
   // comparator for key
   KeyComparator comparator_;
   // container
@@ -59,10 +55,9 @@ constexpr static const auto INTEGER_SIZE = 4;
 using IntegerKeyType = GenericKey<INTEGER_SIZE>;
 using IntegerValueType = RID;
 using IntegerComparatorType = GenericComparator<INTEGER_SIZE>;
-using BPlusTreeIndexForOneIntegerColumn =
-    BPlusTreeIndex<IntegerKeyType, IntegerValueType, IntegerComparatorType>;
+using BPlusTreeIndexForOneIntegerColumn = BPlusTreeIndex<IntegerKeyType, IntegerValueType, IntegerComparatorType>;
 using BPlusTreeIndexIteratorForOneIntegerColumn =
     IndexIterator<IntegerKeyType, IntegerValueType, IntegerComparatorType>;
 using IntegerHashFunctionType = HashFunction<IntegerKeyType>;
 
-} // namespace bustub
+}  // namespace bustub

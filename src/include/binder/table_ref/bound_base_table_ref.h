@@ -1,12 +1,12 @@
 #pragma once
 
+#include <optional>
+#include <string>
+#include <utility>
 #include "binder/bound_table_ref.h"
 #include "catalog/schema.h"
 #include "concurrency/transaction.h"
 #include "fmt/core.h"
-#include <optional>
-#include <string>
-#include <utility>
 
 namespace bustub {
 
@@ -15,19 +15,19 @@ namespace bustub {
  * is `BoundBaseTableRef`.
  */
 class BoundBaseTableRef : public BoundTableRef {
-public:
-  explicit BoundBaseTableRef(std::string table, table_oid_t oid,
-                             std::optional<std::string> alias, Schema schema)
-      : BoundTableRef(TableReferenceType::BASE_TABLE), table_(std::move(table)),
-        oid_(oid), alias_(std::move(alias)), schema_(std::move(schema)) {}
+ public:
+  explicit BoundBaseTableRef(std::string table, table_oid_t oid, std::optional<std::string> alias, Schema schema)
+      : BoundTableRef(TableReferenceType::BASE_TABLE),
+        table_(std::move(table)),
+        oid_(oid),
+        alias_(std::move(alias)),
+        schema_(std::move(schema)) {}
 
   auto ToString() const -> std::string override {
     if (alias_ == std::nullopt) {
-      return fmt::format("BoundBaseTableRef {{ table={}, oid={} }}", table_,
-                         oid_);
+      return fmt::format("BoundBaseTableRef {{ table={}, oid={} }}", table_, oid_);
     }
-    return fmt::format("BoundBaseTableRef {{ table={}, oid={}, alias={} }}",
-                       table_, oid_, *alias_);
+    return fmt::format("BoundBaseTableRef {{ table={}, oid={}, alias={} }}", table_, oid_, *alias_);
   }
 
   auto GetBoundTableName() const -> std::string {
@@ -49,4 +49,4 @@ public:
   /** The schema of the table. */
   Schema schema_;
 };
-} // namespace bustub
+}  // namespace bustub

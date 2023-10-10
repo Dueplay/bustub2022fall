@@ -13,7 +13,7 @@
 #pragma once
 
 #include <list>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
 #include <unordered_map>
 
 #include "buffer/lru_replacer.h"
@@ -27,10 +27,9 @@ namespace bustub {
  * BufferPoolManager reads disk pages to and from its internal buffer pool.
  */
 class BufferPoolManager {
-public:
+ public:
   enum class CallbackType { BEFORE, AFTER };
-  using bufferpool_callback_fn = void (*)(enum CallbackType,
-                                          const page_id_t page_id);
+  using bufferpool_callback_fn = void (*)(enum CallbackType, const page_id_t page_id);
 
   BufferPoolManager() = default;
   /**
@@ -39,8 +38,7 @@ public:
   virtual ~BufferPoolManager() = default;
 
   /** Grading function. Do not modify! */
-  auto FetchPage(page_id_t page_id, bufferpool_callback_fn callback = nullptr)
-      -> Page * {
+  auto FetchPage(page_id_t page_id, bufferpool_callback_fn callback = nullptr) -> Page * {
     GradingCallback(callback, CallbackType::BEFORE, page_id);
     auto *result = FetchPgImp(page_id);
     GradingCallback(callback, CallbackType::AFTER, page_id);
@@ -48,8 +46,7 @@ public:
   }
 
   /** Grading function. Do not modify! */
-  auto UnpinPage(page_id_t page_id, bool is_dirty,
-                 bufferpool_callback_fn callback = nullptr) -> bool {
+  auto UnpinPage(page_id_t page_id, bool is_dirty, bufferpool_callback_fn callback = nullptr) -> bool {
     GradingCallback(callback, CallbackType::BEFORE, page_id);
     auto result = UnpinPgImp(page_id, is_dirty);
     GradingCallback(callback, CallbackType::AFTER, page_id);
@@ -57,8 +54,7 @@ public:
   }
 
   /** Grading function. Do not modify! */
-  auto FlushPage(page_id_t page_id, bufferpool_callback_fn callback = nullptr)
-      -> bool {
+  auto FlushPage(page_id_t page_id, bufferpool_callback_fn callback = nullptr) -> bool {
     GradingCallback(callback, CallbackType::BEFORE, page_id);
     auto result = FlushPgImp(page_id);
     GradingCallback(callback, CallbackType::AFTER, page_id);
@@ -66,8 +62,7 @@ public:
   }
 
   /** Grading function. Do not modify! */
-  auto NewPage(page_id_t *page_id, bufferpool_callback_fn callback = nullptr)
-      -> Page * {
+  auto NewPage(page_id_t *page_id, bufferpool_callback_fn callback = nullptr) -> Page * {
     GradingCallback(callback, CallbackType::BEFORE, INVALID_PAGE_ID);
     auto *result = NewPgImp(page_id);
     GradingCallback(callback, CallbackType::AFTER, *page_id);
@@ -75,8 +70,7 @@ public:
   }
 
   /** Grading function. Do not modify! */
-  auto DeletePage(page_id_t page_id, bufferpool_callback_fn callback = nullptr)
-      -> bool {
+  auto DeletePage(page_id_t page_id, bufferpool_callback_fn callback = nullptr) -> bool {
     GradingCallback(callback, CallbackType::BEFORE, page_id);
     auto result = DeletePgImp(page_id);
     GradingCallback(callback, CallbackType::AFTER, page_id);
@@ -93,7 +87,7 @@ public:
   /** @return size of the buffer pool */
   virtual auto GetPoolSize() -> size_t = 0;
 
-protected:
+ protected:
   /**
    * Grading function. Do not modify!
    * Invokes the callback function if it is not null.
@@ -101,8 +95,7 @@ protected:
    * @param callback_type BEFORE or AFTER
    * @param page_id the page id to invoke the callback with
    */
-  void GradingCallback(bufferpool_callback_fn callback,
-                       CallbackType callback_type, page_id_t page_id) {
+  void GradingCallback(bufferpool_callback_fn callback, CallbackType callback_type, page_id_t page_id) {
     if (callback != nullptr) {
       callback(callback_type, page_id);
     }
@@ -153,4 +146,4 @@ protected:
    */
   virtual void FlushAllPgsImp() = 0;
 };
-} // namespace bustub
+}  // namespace bustub

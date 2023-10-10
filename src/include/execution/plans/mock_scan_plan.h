@@ -27,7 +27,7 @@ namespace bustub {
  * NOTE: This class is used solely for testing.
  */
 class MockScanPlanNode : public AbstractPlanNode {
-public:
+ public:
   /**
    * Construct a new MockScanPlanNode instance.
    * @param output The output schema of this mock scan plan node
@@ -44,14 +44,12 @@ public:
 
   BUSTUB_PLAN_NODE_CLONE_WITH_CHILDREN(MockScanPlanNode);
 
-protected:
-  auto PlanNodeToString() const -> std::string override {
-    return fmt::format("MockScan {{ table={} }}", table_);
-  }
+ protected:
+  auto PlanNodeToString() const -> std::string override { return fmt::format("MockScan {{ table={} }}", table_); }
 
-private:
+ private:
   /** The table name of this mock scan executor */
   std::string table_;
 };
 
-} // namespace bustub
+}  // namespace bustub

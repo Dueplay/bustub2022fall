@@ -27,7 +27,7 @@ namespace bustub {
 class TableHeap {
   friend class TableIterator;
 
-public:
+ public:
   ~TableHeap() = default;
 
   /**
@@ -37,8 +37,8 @@ public:
    * @param log_manager the log manager
    * @param first_page_id the id of the first page
    */
-  TableHeap(BufferPoolManager *buffer_pool_manager, LockManager *lock_manager,
-            LogManager *log_manager, page_id_t first_page_id);
+  TableHeap(BufferPoolManager *buffer_pool_manager, LockManager *lock_manager, LogManager *log_manager,
+            page_id_t first_page_id);
 
   /**
    * Create a table heap with a transaction. (create table)
@@ -47,8 +47,8 @@ public:
    * @param log_manager the log manager
    * @param txn the creating transaction
    */
-  TableHeap(BufferPoolManager *buffer_pool_manager, LockManager *lock_manager,
-            LogManager *log_manager, Transaction *txn);
+  TableHeap(BufferPoolManager *buffer_pool_manager, LockManager *lock_manager, LogManager *log_manager,
+            Transaction *txn);
 
   /**
    * Insert a tuple into the table. If the tuple is too large (>= page_size),
@@ -67,7 +67,7 @@ public:
    * @param txn transaction performing the delete
    * @return true iff the delete is successful (i.e the tuple exists)
    */
-  auto MarkDelete(const RID &rid, Transaction *txn) -> bool; // for delete
+  auto MarkDelete(const RID &rid, Transaction *txn) -> bool;  // for delete
 
   /**
    * if the new tuple is too large to fit in the old page, return false (will
@@ -77,8 +77,7 @@ public:
    * @param txn transaction performing the update
    * @return true is update is successful.
    */
-  auto UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn)
-      -> bool;
+  auto UpdateTuple(const Tuple &tuple, const RID &rid, Transaction *txn) -> bool;
 
   /**
    * Called on Commit/Abort to actually delete a tuple or rollback an insert.
@@ -101,8 +100,7 @@ public:
    * @param txn transaction performing the read
    * @return true if the read was successful (i.e. the tuple exists)
    */
-  auto GetTuple(const RID &rid, Tuple *tuple, Transaction *txn,
-                bool acquire_read_lock = true) -> bool;
+  auto GetTuple(const RID &rid, Tuple *tuple, Transaction *txn, bool acquire_read_lock = true) -> bool;
 
   /** @return the begin iterator of this table */
   auto Begin(Transaction *txn) -> TableIterator;
@@ -113,11 +111,11 @@ public:
   /** @return the id of the first page of this table */
   inline auto GetFirstPageId() const -> page_id_t { return first_page_id_; }
 
-private:
+ private:
   BufferPoolManager *buffer_pool_manager_;
   LockManager *lock_manager_;
   LogManager *log_manager_;
   page_id_t first_page_id_{};
 };
 
-} // namespace bustub
+}  // namespace bustub

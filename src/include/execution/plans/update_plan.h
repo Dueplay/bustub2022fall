@@ -27,15 +27,14 @@ namespace bustub {
  * The tuple(s) to be updated come from the child of the UpdateExecutor.
  */
 class UpdatePlanNode : public AbstractPlanNode {
-public:
+ public:
   /**
    * Construct a new UpdatePlanNode instance.
    * @param child the child plan to obtain tuple from
    * @param table_oid the identifier of the table that should be updated
    * @param target_expressions the target expressions for new tuples
    */
-  UpdatePlanNode(SchemaRef output, AbstractPlanNodeRef child,
-                 table_oid_t table_oid,
+  UpdatePlanNode(SchemaRef output, AbstractPlanNodeRef child, table_oid_t table_oid,
                  std::vector<AbstractExpressionRef> target_expressions)
       : AbstractPlanNode(std::move(output), {std::move(child)}),
         table_oid_{table_oid},
@@ -49,8 +48,7 @@ public:
 
   /** @return The child plan providing tuples to be inserted */
   auto GetChildPlan() const -> AbstractPlanNodeRef {
-    BUSTUB_ASSERT(GetChildren().size() == 1,
-                  "UPDATE should have exactly one child plan.");
+    BUSTUB_ASSERT(GetChildren().size() == 1, "UPDATE should have exactly one child plan.");
     return GetChildAt(0);
   }
 
@@ -62,8 +60,8 @@ public:
   /** The new expression at each column */
   std::vector<AbstractExpressionRef> target_expressions_;
 
-protected:
+ protected:
   auto PlanNodeToString() const -> std::string override;
 };
 
-} // namespace bustub
+}  // namespace bustub

@@ -18,8 +18,7 @@ auto BoundAggCall::ToString() const -> std::string {
 }
 
 auto BoundExpressionListRef::ToString() const -> std::string {
-  return fmt::format("BoundExpressionListRef {{ identifier={}, values={} }}",
-                     identifier_, values_);
+  return fmt::format("BoundExpressionListRef {{ identifier={}, values={} }}", identifier_, values_);
 }
 
 auto BoundCTERef::ToString() const -> std::string {
@@ -31,10 +30,8 @@ auto BoundSubqueryRef::ToString() const -> std::string {
   for (const auto &name : select_list_name_) {
     columns.push_back(fmt::format("{}", fmt::join(name, ".")));
   }
-  return fmt::format(
-      "BoundSubqueryRef {{\n  alias={},\n  subquery={},\n  columns={},\n}}",
-      alias_, StringUtil::IndentAllLines(subquery_->ToString(), 2, true),
-      columns);
+  return fmt::format("BoundSubqueryRef {{\n  alias={},\n  subquery={},\n  columns={},\n}}", alias_,
+                     StringUtil::IndentAllLines(subquery_->ToString(), 2, true), columns);
 }
 
-} // namespace bustub
+}  // namespace bustub

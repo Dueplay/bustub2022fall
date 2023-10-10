@@ -18,9 +18,8 @@
 namespace bustub {
 
 class DeleteStatement : public BoundStatement {
-public:
-  explicit DeleteStatement(std::unique_ptr<BoundBaseTableRef> table,
-                           std::unique_ptr<BoundExpression> expr);
+ public:
+  explicit DeleteStatement(std::unique_ptr<BoundBaseTableRef> table, std::unique_ptr<BoundExpression> expr);
 
   std::unique_ptr<BoundBaseTableRef> table_;
 
@@ -29,4 +28,4 @@ public:
   auto ToString() const -> std::string override;
 };
 
-} // namespace bustub
+}  // namespace bustub

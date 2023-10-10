@@ -11,45 +11,35 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
+#include <string>
 #include "common/exception.h"
 #include "type/numeric_type.h"
-#include <string>
 
 namespace bustub {
 // An integer value of the common sizes.
 class IntegerParentType : public NumericType {
-public:
+ public:
   ~IntegerParentType() override = default;
 
   explicit IntegerParentType(TypeId type);
 
   // Other mathematical functions
   auto Add(const Value &left, const Value &right) const -> Value override = 0;
-  auto Subtract(const Value &left, const Value &right) const
-      -> Value override = 0;
-  auto Multiply(const Value &left, const Value &right) const
-      -> Value override = 0;
-  auto Divide(const Value &left, const Value &right) const
-      -> Value override = 0;
-  auto Modulo(const Value &left, const Value &right) const
-      -> Value override = 0;
+  auto Subtract(const Value &left, const Value &right) const -> Value override = 0;
+  auto Multiply(const Value &left, const Value &right) const -> Value override = 0;
+  auto Divide(const Value &left, const Value &right) const -> Value override = 0;
+  auto Modulo(const Value &left, const Value &right) const -> Value override = 0;
   auto Min(const Value &left, const Value &right) const -> Value override;
   auto Max(const Value &left, const Value &right) const -> Value override;
   auto Sqrt(const Value &val) const -> Value override = 0;
 
   // Comparison functions
-  auto CompareEquals(const Value &left, const Value &right) const
-      -> CmpBool override = 0;
-  auto CompareNotEquals(const Value &left, const Value &right) const
-      -> CmpBool override = 0;
-  auto CompareLessThan(const Value &left, const Value &right) const
-      -> CmpBool override = 0;
-  auto CompareLessThanEquals(const Value &left, const Value &right) const
-      -> CmpBool override = 0;
-  auto CompareGreaterThan(const Value &left, const Value &right) const
-      -> CmpBool override = 0;
-  auto CompareGreaterThanEquals(const Value &left, const Value &right) const
-      -> CmpBool override = 0;
+  auto CompareEquals(const Value &left, const Value &right) const -> CmpBool override = 0;
+  auto CompareNotEquals(const Value &left, const Value &right) const -> CmpBool override = 0;
+  auto CompareLessThan(const Value &left, const Value &right) const -> CmpBool override = 0;
+  auto CompareLessThanEquals(const Value &left, const Value &right) const -> CmpBool override = 0;
+  auto CompareGreaterThan(const Value &left, const Value &right) const -> CmpBool override = 0;
+  auto CompareGreaterThanEquals(const Value &left, const Value &right) const -> CmpBool override = 0;
 
   auto CastAs(const Value &val, TypeId type_id) const -> Value override = 0;
 
@@ -68,7 +58,7 @@ public:
   // Create a copy of this value
   auto Copy(const Value &val) const -> Value override = 0;
 
-protected:
+ protected:
   template <class T1, class T2>
   auto AddValue(const Value &left, const Value &right) const -> Value;
   template <class T1, class T2>
@@ -80,15 +70,13 @@ protected:
   template <class T1, class T2>
   auto ModuloValue(const Value &left, const Value &right) const -> Value;
 
-  auto OperateNull(const Value &left, const Value &right) const
-      -> Value override = 0;
+  auto OperateNull(const Value &left, const Value &right) const -> Value override = 0;
 
   auto IsZero(const Value &val) const -> bool override = 0;
 };
 
 template <class T1, class T2>
-auto IntegerParentType::AddValue(const Value &left, const Value &right) const
-    -> Value {
+auto IntegerParentType::AddValue(const Value &left, const Value &right) const -> Value {
   auto x = left.GetAs<T1>();
   auto y = right.GetAs<T2>();
   auto sum1 = static_cast<T1>(x + y);
@@ -100,8 +88,7 @@ auto IntegerParentType::AddValue(const Value &left, const Value &right) const
   // Overflow detection
   if (sizeof(x) >= sizeof(y)) {
     if ((x > 0 && y > 0 && sum1 < 0) || (x < 0 && y < 0 && sum1 > 0)) {
-      throw Exception(ExceptionType::OUT_OF_RANGE,
-                      "Numeric value out of range.");
+      throw Exception(ExceptionType::OUT_OF_RANGE, "Numeric value out of range.");
     }
     return Value(left.GetTypeId(), sum1);
   }
@@ -112,8 +99,7 @@ auto IntegerParentType::AddValue(const Value &left, const Value &right) const
 }
 
 template <class T1, class T2>
-auto IntegerParentType::SubtractValue(const Value &left,
-                                      const Value &right) const -> Value {
+auto IntegerParentType::SubtractValue(const Value &left, const Value &right) const -> Value {
   auto x = left.GetAs<T1>();
   auto y = right.GetAs<T2>();
   auto diff1 = static_cast<T1>(x - y);
@@ -124,8 +110,7 @@ auto IntegerParentType::SubtractValue(const Value &left,
   // Overflow detection
   if (sizeof(x) >= sizeof(y)) {
     if ((x > 0 && y < 0 && diff1 < 0) || (x < 0 && y > 0 && diff1 > 0)) {
-      throw Exception(ExceptionType::OUT_OF_RANGE,
-                      "Numeric value out of range.");
+      throw Exception(ExceptionType::OUT_OF_RANGE, "Numeric value out of range.");
     }
     return Value(left.GetTypeId(), diff1);
   }
@@ -136,8 +121,7 @@ auto IntegerParentType::SubtractValue(const Value &left,
 }
 
 template <class T1, class T2>
-auto IntegerParentType::MultiplyValue(const Value &left,
-                                      const Value &right) const -> Value {
+auto IntegerParentType::MultiplyValue(const Value &left, const Value &right) const -> Value {
   auto x = left.GetAs<T1>();
   auto y = right.GetAs<T2>();
   auto prod1 = static_cast<T1>(x * y);
@@ -148,8 +132,7 @@ auto IntegerParentType::MultiplyValue(const Value &left,
   // Overflow detection
   if (sizeof(x) >= sizeof(y)) {
     if ((y != 0 && prod1 / y != x)) {
-      throw Exception(ExceptionType::OUT_OF_RANGE,
-                      "Numeric value out of range.");
+      throw Exception(ExceptionType::OUT_OF_RANGE, "Numeric value out of range.");
     }
     return Value(left.GetTypeId(), prod1);
   }
@@ -160,8 +143,7 @@ auto IntegerParentType::MultiplyValue(const Value &left,
 }
 
 template <class T1, class T2>
-auto IntegerParentType::DivideValue(const Value &left, const Value &right) const
-    -> Value {
+auto IntegerParentType::DivideValue(const Value &left, const Value &right) const -> Value {
   auto x = left.GetAs<T1>();
   auto y = right.GetAs<T2>();
   if (y == 0) {
@@ -176,8 +158,7 @@ auto IntegerParentType::DivideValue(const Value &left, const Value &right) const
 }
 
 template <class T1, class T2>
-auto IntegerParentType::ModuloValue(const Value &left, const Value &right) const
-    -> Value {
+auto IntegerParentType::ModuloValue(const Value &left, const Value &right) const -> Value {
   auto x = left.GetAs<T1>();
   auto y = right.GetAs<T2>();
   if (y == 0) {
@@ -191,4 +172,4 @@ auto IntegerParentType::ModuloValue(const Value &left, const Value &right) const
   return Value(right.GetTypeId(), quot2);
 }
 
-} // namespace bustub
+}  // namespace bustub

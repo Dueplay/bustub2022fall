@@ -29,17 +29,15 @@ class AbstractExpression;
 class Column {
   friend class Schema;
 
-public:
+ public:
   /**
    * Non-variable-length constructor for creating a Column.
    * @param column_name name of the column
    * @param type type of the column
    */
   Column(std::string column_name, TypeId type)
-      : column_name_(std::move(column_name)), column_type_(type),
-        fixed_length_(TypeSize(type)) {
-    BUSTUB_ASSERT(type != TypeId::VARCHAR,
-                  "Wrong constructor for VARCHAR type.");
+      : column_name_(std::move(column_name)), column_type_(type), fixed_length_(TypeSize(type)) {
+    BUSTUB_ASSERT(type != TypeId::VARCHAR, "Wrong constructor for VARCHAR type.");
   }
 
   /**
@@ -50,10 +48,11 @@ public:
    * @param expr expression used to create this column
    */
   Column(std::string column_name, TypeId type, uint32_t length)
-      : column_name_(std::move(column_name)), column_type_(type),
-        fixed_length_(TypeSize(type)), variable_length_(length) {
-    BUSTUB_ASSERT(type == TypeId::VARCHAR,
-                  "Wrong constructor for non-VARCHAR type.");
+      : column_name_(std::move(column_name)),
+        column_type_(type),
+        fixed_length_(TypeSize(type)),
+        variable_length_(length) {
+    BUSTUB_ASSERT(type == TypeId::VARCHAR, "Wrong constructor for non-VARCHAR type.");
   }
 
   /**
@@ -62,7 +61,8 @@ public:
    * @param column the original column
    */
   Column(std::string column_name, const Column &column)
-      : column_name_(std::move(column_name)), column_type_(column.column_type_),
+      : column_name_(std::move(column_name)),
+        column_type_(column.column_type_),
         fixed_length_(column.fixed_length_),
         variable_length_(column.variable_length_),
         column_offset_(column.column_offset_) {}
@@ -96,7 +96,7 @@ public:
   /** @return a string representation of this column */
   auto ToString(bool simplified = true) const -> std::string;
 
-private:
+ private:
   /**
    * Return the size in bytes of the type.
    * @param type type whose size is to be determined
@@ -104,23 +104,23 @@ private:
    */
   static auto TypeSize(TypeId type) -> uint8_t {
     switch (type) {
-    case TypeId::BOOLEAN:
-    case TypeId::TINYINT:
-      return 1;
-    case TypeId::SMALLINT:
-      return 2;
-    case TypeId::INTEGER:
-      return 4;
-    case TypeId::BIGINT:
-    case TypeId::DECIMAL:
-    case TypeId::TIMESTAMP:
-      return 8;
-    case TypeId::VARCHAR:
-      // TODO(Amadou): Confirm this.
-      return 12;
-    default: {
-      UNREACHABLE("Cannot get size of invalid type");
-    }
+      case TypeId::BOOLEAN:
+      case TypeId::TINYINT:
+        return 1;
+      case TypeId::SMALLINT:
+        return 2;
+      case TypeId::INTEGER:
+        return 4;
+      case TypeId::BIGINT:
+      case TypeId::DECIMAL:
+      case TypeId::TIMESTAMP:
+        return 8;
+      case TypeId::VARCHAR:
+        // TODO(Amadou): Confirm this.
+        return 12;
+      default: {
+        UNREACHABLE("Cannot get size of invalid type");
+      }
     }
   }
 
@@ -142,11 +142,10 @@ private:
   uint32_t column_offset_{0};
 };
 
-} // namespace bustub
+}  // namespace bustub
 
 template <typename T>
-struct fmt::formatter<
-    T, std::enable_if_t<std::is_base_of<bustub::Column, T>::value, char>>
+struct fmt::formatter<T, std::enable_if_t<std::is_base_of<bustub::Column, T>::value, char>>
     : fmt::formatter<std::string> {
   template <typename FormatCtx>
   auto format(const bustub::Column &x, FormatCtx &ctx) const {
@@ -155,9 +154,7 @@ struct fmt::formatter<
 };
 
 template <typename T>
-struct fmt::formatter<
-    std::unique_ptr<T>,
-    std::enable_if_t<std::is_base_of<bustub::Column, T>::value, char>>
+struct fmt::formatter<std::unique_ptr<T>, std::enable_if_t<std::is_base_of<bustub::Column, T>::value, char>>
     : fmt::formatter<std::string> {
   template <typename FormatCtx>
   auto format(const std::unique_ptr<bustub::Column> &x, FormatCtx &ctx) const {

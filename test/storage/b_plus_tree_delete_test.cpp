@@ -14,9 +14,9 @@
 #include <cstdio>
 
 #include "buffer/buffer_pool_manager_instance.h"
-#include "storage/index/b_plus_tree.h"
-#include "test_util.h" // NOLINT
 #include "gtest/gtest.h"
+#include "storage/index/b_plus_tree.h"
+#include "test_util.h"  // NOLINT
 
 namespace bustub {
 
@@ -28,8 +28,7 @@ TEST(BPlusTreeTests, DISABLED_DeleteTest1) {
   auto *disk_manager = new DiskManager("test.db");
   BufferPoolManager *bpm = new BufferPoolManagerInstance(50, disk_manager);
   // create b+ tree
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", bpm,
-                                                           comparator);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", bpm, comparator);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
@@ -74,8 +73,7 @@ TEST(BPlusTreeTests, DISABLED_DeleteTest1) {
     is_present = tree.GetValue(index_key, &rids);
 
     if (!is_present) {
-      EXPECT_NE(std::find(remove_keys.begin(), remove_keys.end(), key),
-                remove_keys.end());
+      EXPECT_NE(std::find(remove_keys.begin(), remove_keys.end(), key), remove_keys.end());
     } else {
       EXPECT_EQ(rids.size(), 1);
       EXPECT_EQ(rids[0].GetPageId(), 0);
@@ -102,8 +100,7 @@ TEST(BPlusTreeTests, DISABLED_DeleteTest2) {
   auto *disk_manager = new DiskManager("test.db");
   BufferPoolManager *bpm = new BufferPoolManagerInstance(50, disk_manager);
   // create b+ tree
-  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", bpm,
-                                                           comparator);
+  BPlusTree<GenericKey<8>, RID, GenericComparator<8>> tree("foo_pk", bpm, comparator);
   GenericKey<8> index_key;
   RID rid;
   // create transaction
@@ -148,8 +145,7 @@ TEST(BPlusTreeTests, DISABLED_DeleteTest2) {
     is_present = tree.GetValue(index_key, &rids);
 
     if (!is_present) {
-      EXPECT_NE(std::find(remove_keys.begin(), remove_keys.end(), key),
-                remove_keys.end());
+      EXPECT_NE(std::find(remove_keys.begin(), remove_keys.end(), key), remove_keys.end());
     } else {
       EXPECT_EQ(rids.size(), 1);
       EXPECT_EQ(rids[0].GetPageId(), 0);
@@ -167,4 +163,4 @@ TEST(BPlusTreeTests, DISABLED_DeleteTest2) {
   remove("test.db");
   remove("test.log");
 }
-} // namespace bustub
+}  // namespace bustub

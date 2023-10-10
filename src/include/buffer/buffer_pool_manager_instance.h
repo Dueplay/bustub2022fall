@@ -13,7 +13,7 @@
 #pragma once
 
 #include <list>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
 #include <unordered_map>
 
 #include "buffer/buffer_pool_manager.h"
@@ -30,7 +30,7 @@ namespace bustub {
  * BufferPoolManager reads disk pages to and from its internal buffer pool.
  */
 class BufferPoolManagerInstance : public BufferPoolManager {
-public:
+ public:
   /**
    * @brief Creates a new BufferPoolManagerInstance.
    * @param pool_size the size of the buffer pool
@@ -39,8 +39,7 @@ public:
    * @param log_manager the log manager (for testing only: nullptr = disable
    * logging). Please ignore this for P1.
    */
-  BufferPoolManagerInstance(size_t pool_size, DiskManager *disk_manager,
-                            size_t replacer_k = LRUK_REPLACER_K,
+  BufferPoolManagerInstance(size_t pool_size, DiskManager *disk_manager, size_t replacer_k = LRUK_REPLACER_K,
                             LogManager *log_manager = nullptr);
 
   /**
@@ -54,7 +53,7 @@ public:
   /** @brief Return the pointer to all the pages in the buffer pool. */
   auto GetPages() -> Page * { return pages_; }
 
-protected:
+ protected:
   /**
    * TODO(P1): Add implementation
    *
@@ -200,4 +199,4 @@ protected:
 
   // TODO(student): You may add additional private members and helper functions
 };
-} // namespace bustub
+}  // namespace bustub

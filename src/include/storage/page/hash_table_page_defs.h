@@ -17,8 +17,7 @@
 /**
  * Linear Probe Hashing Definitions
  */
-#define HASH_TABLE_BLOCK_TYPE                                                  \
-  HashTableBlockPage<KeyType, ValueType, KeyComparator>
+#define HASH_TABLE_BLOCK_TYPE HashTableBlockPage<KeyType, ValueType, KeyComparator>
 
 /**
  * BLOCK_ARRAY_SIZE is the number of (key, value) pairs that can be stored in a
@@ -34,8 +33,7 @@
 /**
  * Extendible Hashing Definitions
  */
-#define HASH_TABLE_BUCKET_TYPE                                                 \
-  HashTableBucketPage<KeyType, ValueType, KeyComparator>
+#define HASH_TABLE_BUCKET_TYPE HashTableBucketPage<KeyType, ValueType, KeyComparator>
 
 /**
  * BUCKET_ARRAY_SIZE is the number of (key, value) pairs that can be stored in

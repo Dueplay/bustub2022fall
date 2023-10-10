@@ -23,11 +23,11 @@ namespace bustub {
  * transactions temporarily.
  */
 class CheckpointManager {
-public:
-  CheckpointManager(TransactionManager *transaction_manager,
-                    LogManager *log_manager,
+ public:
+  CheckpointManager(TransactionManager *transaction_manager, LogManager *log_manager,
                     BufferPoolManager *buffer_pool_manager)
-      : transaction_manager_(transaction_manager), log_manager_(log_manager),
+      : transaction_manager_(transaction_manager),
+        log_manager_(log_manager),
         buffer_pool_manager_(buffer_pool_manager) {}
 
   ~CheckpointManager() = default;
@@ -35,10 +35,10 @@ public:
   void BeginCheckpoint();
   void EndCheckpoint();
 
-private:
+ private:
   TransactionManager *transaction_manager_ __attribute__((__unused__));
   LogManager *log_manager_ __attribute__((__unused__));
   BufferPoolManager *buffer_pool_manager_ __attribute__((__unused__));
 };
 
-} // namespace bustub
+}  // namespace bustub

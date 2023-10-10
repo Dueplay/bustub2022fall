@@ -13,7 +13,7 @@
 #pragma once
 
 #include <list>
-#include <mutex> // NOLINT
+#include <mutex>  // NOLINT
 #include <vector>
 
 #include "buffer/replacer.h"
@@ -25,7 +25,7 @@ namespace bustub {
  * LRUReplacer implements the Least Recently Used replacement policy.
  */
 class LRUReplacer : public Replacer {
-public:
+ public:
   /**
    * Create a new LRUReplacer.
    * @param num_pages the maximum number of pages the LRUReplacer will be
@@ -46,8 +46,8 @@ public:
 
   auto Size() -> size_t override;
 
-private:
+ private:
   // TODO(student): implement me!
 };
 
-} // namespace bustub
+}  // namespace bustub

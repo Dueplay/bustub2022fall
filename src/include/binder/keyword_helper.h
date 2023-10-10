@@ -38,7 +38,7 @@
 namespace bustub {
 
 class KeywordHelper {
-public:
+ public:
   /** Return true if the given text matches a keyword of the parser. */
   static auto IsKeyword(const std::string &text) -> bool;
 
@@ -48,8 +48,7 @@ public:
 
   // Writes a std::string that is optionally quoted + escaped so it can be used
   // as an identifier
-  static auto WriteOptionallyQuoted(const std::string &text, char quote = '"')
-      -> std::string;
+  static auto WriteOptionallyQuoted(const std::string &text, char quote = '"') -> std::string;
 };
 
-} // namespace bustub
+}  // namespace bustub

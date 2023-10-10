@@ -55,13 +55,12 @@ enum class ExceptionType {
 };
 
 class Exception : public std::runtime_error {
-public:
+ public:
   /**
    * Construct a new Exception instance.
    * @param message The exception message
    */
-  explicit Exception(const std::string &message)
-      : std::runtime_error(message), type_(ExceptionType::INVALID) {
+  explicit Exception(const std::string &message) : std::runtime_error(message), type_(ExceptionType::INVALID) {
 #ifndef NDEBUG
     std::string exception_message = "Message :: " + message + "\n";
     std::cerr << exception_message;
@@ -77,8 +76,7 @@ public:
       : std::runtime_error(message), type_(exception_type) {
 #ifndef NDEBUG
     std::string exception_message =
-        "\nException Type :: " + ExceptionTypeToString(type_) +
-        "\nMessage :: " + message + "\n";
+        "\nException Type :: " + ExceptionTypeToString(type_) + "\nMessage :: " + message + "\n";
     std::cerr << exception_message;
 #endif
   }
@@ -89,47 +87,45 @@ public:
   /** @return A human-readable string for the specified exception type */
   static auto ExceptionTypeToString(ExceptionType type) -> std::string {
     switch (type) {
-    case ExceptionType::INVALID:
-      return "Invalid";
-    case ExceptionType::OUT_OF_RANGE:
-      return "Out of Range";
-    case ExceptionType::CONVERSION:
-      return "Conversion";
-    case ExceptionType::UNKNOWN_TYPE:
-      return "Unknown Type";
-    case ExceptionType::DECIMAL:
-      return "Decimal";
-    case ExceptionType::MISMATCH_TYPE:
-      return "Mismatch Type";
-    case ExceptionType::DIVIDE_BY_ZERO:
-      return "Divide by Zero";
-    case ExceptionType::INCOMPATIBLE_TYPE:
-      return "Incompatible type";
-    case ExceptionType::OUT_OF_MEMORY:
-      return "Out of Memory";
-    case ExceptionType::NOT_IMPLEMENTED:
-      return "Not implemented";
-    default:
-      return "Unknown";
+      case ExceptionType::INVALID:
+        return "Invalid";
+      case ExceptionType::OUT_OF_RANGE:
+        return "Out of Range";
+      case ExceptionType::CONVERSION:
+        return "Conversion";
+      case ExceptionType::UNKNOWN_TYPE:
+        return "Unknown Type";
+      case ExceptionType::DECIMAL:
+        return "Decimal";
+      case ExceptionType::MISMATCH_TYPE:
+        return "Mismatch Type";
+      case ExceptionType::DIVIDE_BY_ZERO:
+        return "Divide by Zero";
+      case ExceptionType::INCOMPATIBLE_TYPE:
+        return "Incompatible type";
+      case ExceptionType::OUT_OF_MEMORY:
+        return "Out of Memory";
+      case ExceptionType::NOT_IMPLEMENTED:
+        return "Not implemented";
+      default:
+        return "Unknown";
     }
   }
 
-private:
+ private:
   ExceptionType type_;
 };
 
 class NotImplementedException : public Exception {
-public:
+ public:
   NotImplementedException() = delete;
-  explicit NotImplementedException(const std::string &msg)
-      : Exception(ExceptionType::NOT_IMPLEMENTED, msg) {}
+  explicit NotImplementedException(const std::string &msg) : Exception(ExceptionType::NOT_IMPLEMENTED, msg) {}
 };
 
 class ExecutionException : public Exception {
-public:
+ public:
   ExecutionException() = delete;
-  explicit ExecutionException(const std::string &msg)
-      : Exception(ExceptionType::EXECUTION, msg) {}
+  explicit ExecutionException(const std::string &msg) : Exception(ExceptionType::EXECUTION, msg) {}
 };
 
-} // namespace bustub
+}  // namespace bustub
