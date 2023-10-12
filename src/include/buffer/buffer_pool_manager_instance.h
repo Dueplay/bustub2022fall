@@ -198,5 +198,7 @@ class BufferPoolManagerInstance : public BufferPoolManager {
   }
 
   // TODO(student): You may add additional private members and helper functions
+ private:
+  auto FindVictim(frame_id_t *available_frame_id) -> bool;
 };
 }  // namespace bustub
