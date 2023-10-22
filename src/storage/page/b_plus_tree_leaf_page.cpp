@@ -28,7 +28,7 @@ namespace bustub {
  */
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::Init(page_id_t page_id, page_id_t parent_id, int max_size) {
-  setPageType(IndexPageType::LEAF_PAGE);
+  SetPageType(IndexPageType::LEAF_PAGE);
   SetPageId(page_id);
   SetParentPageId(parent_id);
   SetNextPageId(INVALID_PAGE_ID);
@@ -70,7 +70,7 @@ auto B_PLUS_TREE_LEAF_PAGE_TYPE::PairAt(int index) const -> const MappingType & 
 INDEX_TEMPLATE_ARGUMENTS
 auto B_PLUS_TREE_LEAF_PAGE_TYPE::Insert(const KeyType &key, const ValueType &value, KeyComparator &comparator) -> bool {
   auto insert_idx = GetSize();
-  auto left = 1;
+  auto left = 0;
   auto right = GetSize() - 1;
   while (left <= right) {
     auto mid = (left + right) / 2;
@@ -158,7 +158,7 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveAllTo(BPlusTreeLeafPage *recipient) {
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveLatterHalfTo(BPlusTreeLeafPage *recipient) {
   BUSTUB_ASSERT(GetSize() == GetMaxSize(), "MoveLatterHalfTo(): Assert GetSize() == GetMaxSize()");
-  auto remain_size = GetMaxSize() / 2 + (total_size % 2 != 0);
+  auto remain_size = GetMaxSize() / 2 + (GetMaxSize() % 2 != 0);
   auto move_size = GetMaxSize() - remain_size;
   std::copy(&array_[remain_size], &array_[GetSize()], recipient->array_);
   SetSize(remain_size);
@@ -170,8 +170,9 @@ void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveLatterHalfTo(BPlusTreeLeafPage *recipient) 
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveFirstToEndOf(BPlusTreeLeafPage *recipient) {
   auto recipient_size = recipient->GetSize();
-  recipient->KeyAt(recipient_size, KeyAt(0));
-  recipient->ValueAt(recipient_size, ValueAt(0));
+  recipient->SetKeyAt(recipient_size, KeyAt(0));
+  recipient->SetValueAt(recipient_size, ValueAt(0));
+  recipient->IncreaseSize(1);
   FillIndex(1);
   DecreaseSize(1);
 }
@@ -180,8 +181,9 @@ INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_LEAF_PAGE_TYPE::MoveLastToFrontOf(BPlusTreeLeafPage *recipient) {
   auto size = GetSize();
   recipient->ExcavateIndex(0);
-  recipient->KeyAt(0, KeyAt(size - 1));
-  recipient->ValueAt(0, ValueAt(size - 1));
+  recipient->SetKeyAt(0, KeyAt(size - 1));
+  recipient->SetValueAt(0, ValueAt(size - 1));
+  recipient->IncreaseSize(1);
   DecreaseSize(1);
 }
 

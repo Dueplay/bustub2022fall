@@ -177,8 +177,9 @@ void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveLatterHalfWithOneExtraTo(BPlusTreeInter
 INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveFirstToEndOf(BPlusTreeInternalPage *recipient) {
   auto recipient_size = recipient->GetSize();
-  recipient->KeyAt(recipient_size, KeyAt(0));
-  recipient->ValueAt(recipient_size, ValueAt(0));
+  recipient->SetKeyAt(recipient_size, KeyAt(0));
+  recipient->SetValueAt(recipient_size, ValueAt(0));
+  recipient->IncreaseSize(1);
   FillIndex(1);
   DecreaseSize(1);
 }
@@ -187,8 +188,9 @@ INDEX_TEMPLATE_ARGUMENTS
 void B_PLUS_TREE_INTERNAL_PAGE_TYPE::MoveLastToFrontOf(BPlusTreeInternalPage *recipient) {
   auto size = GetSize();
   recipient->ExcavateIndex(0);
-  recipient->KeyAt(0, KeyAt(size - 1));
-  recipient->ValueAt(0, ValueAt(size - 1));
+  recipient->SetKeyAt(0, KeyAt(size - 1));
+  recipient->SetValueAt(0, ValueAt(size - 1));
+  recipient->IncreaseSize(1);
   DecreaseSize(1);
 }
 
