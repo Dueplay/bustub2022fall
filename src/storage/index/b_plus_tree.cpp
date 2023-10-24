@@ -295,7 +295,9 @@ void BPLUSTREE_TYPE::InsertInParent(BPlusTreePage *left_page, BPlusTreePage *rig
     parent_page->MoveLatterHalfWithOneExtraTo(parent_page_prime, upward_key, right_page->GetPageId(), comparator_);
     // 更新新节点中子节点的父节点指针为这个新节点
     RefreshAllParentPointer(parent_page_prime);
-    const auto futher_upward_key = parent_page_prime->KeyAt(0);  // actually invalid 0-indexed
+    const auto futher_upward_key = parent_page_prime->KeyAt(
+        0);  // actually invalid
+             // 0-indexed，这个key是要存放在上一层中，所以在移动时是直接把后面一半key移动到新page从0开始的位置
     // 递归上一层，将parent_page_prime的key插入到其父亲节点中
     InsertInParent(parent_page, parent_page_prime, futher_upward_key);
     buffer_pool_manager_->UnpinPage(parent_page_prime->GetPageId(), true);
@@ -416,7 +418,7 @@ void BPLUSTREE_TYPE::RemoveEntry(BPlusTreePage *base_page, const KeyType &key, i
       // 2. redistribute from left
       // 3. merge from right
       // 4. merge from left
-      auto redistribute_success = TryRedistribute(base_page, key);  // try right and then left
+      auto redistribute_success = TryRedistribute(base_page, key);  // try steal a kv form right and then left
       if (!redistribute_success) {
         auto merge_success = TryMerge(base_page, key, dirty_height);  // must success
         BUSTUB_ASSERT(redistribute_success || merge_success, "redistribute_success || merge_success");
@@ -492,6 +494,7 @@ void BPLUSTREE_TYPE::Redistribute(BPlusTreePage *base_page, BPlusTreePage *sibli
       // base <- sibling_internal
       sibling_internal->MoveFirstToEndOf(base_internal);
       RefreshParentPointer(base_internal, base_internal->GetSize() - 1);
+      // 还需要修改偷取过来的key为父节点中的key
       base_internal->SetKeyAt(base_internal->GetSize() - 1, parent_page->KeyAt(base_index + 1));
       parent_page->SetKeyAt(base_index + 1, sibling_internal->KeyAt(0));
     }
@@ -504,6 +507,7 @@ auto BPLUSTREE_TYPE::TryMerge(BPlusTreePage *base_page, const KeyType &key, int 
   auto parent_page_id = base_page->GetParentPageId();
   auto [raw_parent_page, base_parent_page] = FetchBPlusTreePage(parent_page_id);
   auto parent_page = ReinterpretAsInternalPage(base_parent_page);
+  // 找到不满足minsize节点所在parent节点中位置
   auto underfull_idx = parent_page->SearchJumpIdx(key, comparator_);
   auto is_merge = false;
   if (underfull_idx < parent_page->GetSize() - 1) {
@@ -543,6 +547,7 @@ void BPLUSTREE_TYPE::Merge(BPlusTreePage *base_page, BPlusTreePage *sibling_page
       sibling_leaf->SetNextPageId(base_leaf->GetNextPageId());
       // mark off the link
       base_leaf->SetParentPageId(INVALID_PAGE_ID);
+      // 将不满的节点合并到了左边兄弟节点后，需要在父节点中删除不满节点的key，递归的一个过程
       RemoveEntry(parent_page, key_in_between, dirty_height);
     } else {
       // <----.merge right sibling_leaf to base
@@ -552,6 +557,7 @@ void BPLUSTREE_TYPE::Merge(BPlusTreePage *base_page, BPlusTreePage *sibling_page
       base_leaf->SetNextPageId(sibling_leaf->GetNextPageId());
       // mark off the link
       sibling_leaf->SetParentPageId(INVALID_PAGE_ID);
+      //
       RemoveEntry(parent_page, key_in_between, dirty_height);
     }
   } else {
