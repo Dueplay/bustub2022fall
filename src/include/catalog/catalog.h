@@ -216,7 +216,7 @@ class Catalog {
     BUSTUB_ASSERT((index_names_.find(table_name) != index_names_.end()), "Broken Invariant");
 
     // Determine if the requested index already exists for this table
-    auto &table_indexes = index_names_.find(table_name)->second;
+    auto &table_indexes = index_names_.find(table_name)->second;  // map<index_name,index_id>
     if (table_indexes.find(index_name) != table_indexes.end()) {
       // The requested index already exists for this table
       return NULL_INDEX_INFO;
@@ -236,6 +236,7 @@ class Catalog {
     // Populate the index with all tuples in table heap
     auto *table_meta = GetTable(table_name);
     auto *heap = table_meta->table_.get();
+    // 一行一行读表中的tuple，再将对应列的数据读出
     for (auto tuple = heap->Begin(txn); tuple != heap->End(); ++tuple) {
       index->InsertEntry(tuple->KeyFromTuple(schema, key_schema, key_attrs), tuple->GetRid(), txn);
     }
@@ -356,12 +357,13 @@ class Catalog {
 
   /**
    * Map table identifier -> table metadata.
-   *
+   * id -> table info
    * NOTE: `tables_` owns all table metadata.
+   * 想要访问一张 table 时，先使用 name 或 id 从 Catalog 得到 table info，再访问 table info 中的 table heap。
    */
   std::unordered_map<table_oid_t, std::unique_ptr<TableInfo>> tables_;
 
-  /** Map table name -> table identifiers. */
+  /** Map table name -> table identifiers. id -> table_name */
   std::unordered_map<std::string, table_oid_t> table_names_;
 
   /** The next table identifier to be used. */

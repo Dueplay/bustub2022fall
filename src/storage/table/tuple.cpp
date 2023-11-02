@@ -21,6 +21,7 @@
 namespace bustub {
 
 // TODO(Amadou): It does not look like nulls are supported. Add a null bitmap?
+// Value = actual raw data + size + type id
 Tuple::Tuple(std::vector<Value> values, const Schema *schema) : allocated_(true) {
   assert(values.size() == schema->GetColumnCount());
 
@@ -123,7 +124,7 @@ auto Tuple::GetDataPtr(const Schema *schema, const uint32_t column_idx) const ->
   if (is_inlined) {
     return (data_ + col.GetOffset());
   }
-  // We read the relative offset from the tuple data.
+  // We read the relative offset from the tuple data. for ptr
   int32_t offset = *reinterpret_cast<int32_t *>(data_ + col.GetOffset());
   // And return the beginning address of the real data for the VARCHAR type.
   return (data_ + offset);

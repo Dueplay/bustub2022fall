@@ -54,7 +54,7 @@ class TableHeap {
    * Insert a tuple into the table. If the tuple is too large (>= page_size),
    * return false.
    * @param tuple tuple to insert
-   * @param[out] rid the rid of the inserted tuple
+   * @param[out] rid the rid of the inserted tuple。RID = page id + slot num
    * @param txn the transaction performing the insert
    * @return true iff the insert is successful
    */
@@ -115,7 +115,8 @@ class TableHeap {
   BufferPoolManager *buffer_pool_manager_;
   LockManager *lock_manager_;
   LogManager *log_manager_;
-  page_id_t first_page_id_{};
+  page_id_t first_page_id_{};  // 仅保存第一个table page的page
+                               // id，后续page可以通过page->next_pageid来访问。通过bufferpoo来访问
 };
 
 }  // namespace bustub

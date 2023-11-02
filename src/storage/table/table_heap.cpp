@@ -86,6 +86,7 @@ auto TableHeap::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn) -> b
   }
   // This line has caused most of us to double-take and "whoa double unlatch".
   // We are not, in fact, double unlatching. See the invariant above.
+  // 这里的curr_page 可能是最初的curr_page,也有可能是在循环中更新了的curr_page
   cur_page->WUnlatch();
   buffer_pool_manager_->UnpinPage(cur_page->GetTablePageId(), true);
   // Update the transaction's write set.
