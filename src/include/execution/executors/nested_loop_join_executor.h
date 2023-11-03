@@ -19,6 +19,7 @@
 #include "execution/executors/abstract_executor.h"
 #include "execution/plans/nested_loop_join_plan.h"
 #include "storage/table/tuple.h"
+#include "type/value_factory.h"
 
 namespace bustub {
 
@@ -56,8 +57,32 @@ class NestedLoopJoinExecutor : public AbstractExecutor {
   auto GetOutputSchema() const -> const Schema & override { return plan_->OutputSchema(); };
 
  private:
+  void MergeValueFromTuple(std::vector<Value> &value, bool right_null) {
+    auto left_col_cnt = left_child_->GetOutputSchema().GetColumnCount();
+    auto right_col_cnt = right_child_->GetOutputSchema().GetColumnCount();
+    for (unsigned int i = 0; i < left_col_cnt; i++) {
+      value.push_back(left_tuple_.GetValue(&left_child_->GetOutputSchema(), i));
+    }
+
+    for (unsigned int i = 0; i < right_col_cnt; i++) {
+      if (!right_null) {
+        value.push_back(right_tuple_.GetValue(&right_child_->GetOutputSchema(), i));
+      } else {
+        value.push_back(ValueFactory::GetNullValueByType(right_child_->GetOutputSchema().GetColumn(i).GetType()));
+      }
+    }
+  }
   /** The NestedLoopJoin plan node to be executed. */
   const NestedLoopJoinPlanNode *plan_;
+  // left child
+  std::unique_ptr<AbstractExecutor> left_child_;
+  std::unique_ptr<AbstractExecutor> right_child_;
+  Tuple left_tuple_{};
+  Tuple right_tuple_{};
+  bool left_status_{false};
+  bool right_status_{false};
+  // if the tuple in outer table has found a match in inner table before wrap around
+  bool left_join_found_{false};
 };
 
 }  // namespace bustub
