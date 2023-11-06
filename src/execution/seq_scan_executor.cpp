@@ -29,6 +29,7 @@ void SeqScanExecutor::Init() {
 
 auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
   // auto oid = plan_->GetTableOid();
+
   if (cursor_ == end_) {
     return false;
   }
@@ -44,7 +45,7 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
     if (!value.IsNull() && value.GetAs<bool>()) {
       *tuple = *cursor_++;
       if (table_name_ == "nft") {
-        cursor_ == end_;
+        cursor_ = end_;
       }
       return true;
     }
