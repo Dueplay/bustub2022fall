@@ -74,6 +74,13 @@ class LockManager {
     std::mutex latch_;
   };
 
+  /** Allocate a compatible matrix to check  if a request could proceed 
+   * the key is the lock held by previous request, the value is lock mode allowd to be proceeded for new requests
+   * @return compatible matrix
+  */
+  static auto MakeCompatibleMatrix() -> std::unordered_map<LockMode, std::unordered_set<LockMode>> {
+std::unordered_map<LockMode, std::unordered_set<LockMode>> 
+  }
   /**
    * Creates a new lock manager configured for the deadlock detection policy.
    */
@@ -87,6 +94,54 @@ class LockManager {
     cycle_detection_thread_->join();
     delete cycle_detection_thread_;
   }
+
+  /**
+   * 从map中获取LockRequestQueue的shared_ptr以避免竞争情况，首先在map上获取latch
+   * 这个表还没有请求队列则创建一个空的，再返回
+   * @param table_oid the requesting table id
+   * @return shared_ptr to LockRequestQueue for this table
+   */
+  auto GetTableQueue(table_oid_t table_oid) -> std::shared_ptr<LockRequestQueue> {
+    std::lock_guard<std::mutex> lock(table_lock_map_latch_);
+    if (table_lock_map_.find(table_oid) == table_lock_map_.end()) {
+      table_lock_map_.insert({table_oid, std::shared_ptr<LockRequestQueue>()});
+    }
+    return table_lock_map_[table_oid];
+  }
+
+  /**
+   * check if a locking request is valid based on the isolation level and phase of the txn
+   * @param txn the transaction making request
+   * @param reason[out] if this request is to be aborted, populated with abort reason
+   * @param is_upgrade[out] if this request is an upgrade request, populated True
+   * @param prev_mode[out] if this request is an upgrade request, populated previous lock mode
+   * @param queue the request queue for this specific resource
+   * @param on_table True if this is request on table, False if on row
+   * @param mode the lock mode requesting
+   * @param table_id the table id
+   * @param rid the row id,default value of RID if it's a table request
+   * @precondition hold mutex for the corresponding resource's request queue
+   * @return True if this is a valid request,False otherwise with abort reason populated to be thrown
+   */
+  auto IsLockRequestValid(Transaction *txn, AbortReason &reason, bool &is_upgrade, LockMode &prev_mode,
+                          std::shared_ptr<LockRequestQueue> &queue, bool on_table, LockMode mode, table_oid_t table_id,
+                          RID rid) -> bool;
+
+  /**
+   * check if a unlocking request is valid based on the isolation level and phase of the txn
+   * @param txn the transaction making request
+   * @param reason[out] if this request is to be aborted, populated with abort reason
+   * @param mode[out] the lock mode held by the transaction
+   * @param queue the request queue for this specific resource
+   * @param on_table True if this is request on table, False if on row
+   * @param table_id the table id
+   * @param rid the row id,default value of RID if it's a table request
+   * @precondition hold mutex for the corresponding resource's request queue
+   * @return True if this is a valid request,False otherwise with abort reason populated to be thrown
+   */
+  auto IsUnlockRequestValid(Transaction *txn, AbortReason &reason, LockMode &mode,
+                            std::shared_ptr<LockRequestQueue> &queue, bool on_table, table_oid_t table_id, RID rid)
+      -> bool;
 
   /**
    * [LOCK_NOTE]
@@ -321,6 +376,11 @@ class LockManager {
 
  private:
   /** Fall 2022 */
+  /** compatible matrix to test if a new request could proceed given previous granted request */
+  std::unordered_map<LockMode, std::unordered_set<LockMode>> compatible_matrix_;
+  /** upgrade matrix to test if a new upgrade request could proceed given previous granted requests */
+  std::unordered_map<LockMode, std::unordered_set<LockMode>> upgrade_matrix_;
+
   /** Structure that holds lock requests for a given table oid */
   std::unordered_map<table_oid_t, std::shared_ptr<LockRequestQueue>> table_lock_map_;
   /** Coordination */
