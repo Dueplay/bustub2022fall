@@ -45,9 +45,9 @@ class LockManager {
   class LockRequest {
    public:
     LockRequest(txn_id_t txn_id, LockMode lock_mode, table_oid_t oid) /** Table lock request */
-        : txn_id_(txn_id), lock_mode_(lock_mode), oid_(oid) {}
+        : txn_id_(txn_id), lock_mode_(lock_mode), oid_(oid), on_table_(true) {}
     LockRequest(txn_id_t txn_id, LockMode lock_mode, table_oid_t oid, RID rid) /** Row lock request */
-        : txn_id_(txn_id), lock_mode_(lock_mode), oid_(oid), rid_(rid) {}
+        : txn_id_(txn_id), lock_mode_(lock_mode), oid_(oid), rid_(rid), on_table_(false) {}
 
     /** Txn_id of the txn requesting the lock */
     txn_id_t txn_id_;
@@ -58,14 +58,48 @@ class LockManager {
     table_oid_t oid_;
     /** Rid of the row for a row lock; unused for table locks */
     RID rid_;
+    /** whether the request is on table or on row */
+    bool on_table_;
     /** Whether the lock has been granted or not */
     bool granted_{false};
   };
 
   class LockRequestQueue {
    public:
+    /**
+     * place a newly-generted request into queue at either the first un-granted position or the tail
+     * @param request pointer to allocated request
+     * @param place_first True if need to be placed at the first un-granted position
+     */
+    void InsertIntoQueue(const std::shared_ptr<LockRequest> &request, bool place_first) {
+      if (!place_first) {
+        request_queue_.push_back(request);
+        return;
+      }
+      // insert into the first un-granted position
+      const auto it = std::find_if_not(request_queue_.begin(), request_queue_.end(),
+                                       [](const std::shared_ptr<LockRequest> &request) { return request->granted_; });
+      request_queue_.insert(it, request);
+    }
+
+    /**
+     * Check if all the previous granted request's lock mode is compatible up to until next
+     * @param next the first un-granted request in the queue
+     * @return True if next's lock mode is compatible with all previous granted requests in the queue
+     */
+    auto IsCompatibleUntil(std::list<std::shared_ptr<LockRequest>>::iterator next,
+                           std::unordered_map<LockMode, std::unordered_set<LockMode>> &compatible_matrix) -> bool {
+      for (auto it = request_queue_.begin(); it != next; it++) {
+        if (compatible_matrix[(*it)->lock_mode_].find((*next)->lock_mode_) ==
+            compatible_matrix[(*it)->lock_mode_].end()) {
+          return false;
+        }
+      }
+      return true;
+    }
+
     /** List of lock requests for the same resource (table or row) */
-    std::list<LockRequest *> request_queue_;
+    std::list<std::shared_ptr<LockRequest>> request_queue_;
     /** For notifying blocked transactions on this rid */
     std::condition_variable cv_;
     /** txn_id of an upgrading transaction (if any) */
@@ -181,6 +215,23 @@ class LockManager {
   auto IsUnlockRequestValid(Transaction *txn, AbortReason &reason, LockMode &mode,
                             std::shared_ptr<LockRequestQueue> &queue, bool on_table, table_oid_t table_id, RID rid)
       -> bool;
+
+  /**
+   * check if a pending locking request could proceed
+   * this func assumes that request has already been placed into request_queue at proper index
+   * (unlocking request won't block and always proceed as long as valid)
+   * This request must already have been verified as a valid request
+   * To be used in a condition variable wait repeatedly
+   * @param request pending request (already been placed into queue)
+   * @param txn the transaction requesting
+   * @param queue the LockReqeustQueue for specific resource
+   * @param is_upgrade Ture if this request is an upgrading request
+   * @param already_abort[out] if this transaction has been aborted meantime
+   * @precondition holding mutex for the corresponding resource's reqeust queue
+   * @return True if could exit the condition variable waiting(should check if should_abort variable)
+   */
+  auto CouldLockRequestProceed(const std::shared_ptr<LockManager::LockRequest> &request, Transaction *txn,
+                               const std::shared_ptr<LockRequestQueue> &queue, bool is_upgrade, bool &is_already_abort);
 
   /**
    * [LOCK_NOTE]

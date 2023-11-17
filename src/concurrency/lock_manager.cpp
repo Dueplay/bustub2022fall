@@ -129,6 +129,65 @@ auto LockManager::IsUnlockRequestValid(Transaction *txn, AbortReason &reason, Lo
                                        std::shared_ptr<LockRequestQueue> &queue, bool on_table, table_oid_t table_id,
                                        RID rid) -> bool {}
 
+auto LockManager::CouldLockRequestProceed(const std::shared_ptr<LockManager::LockRequest> &request, Transaction *txn,
+                                          const std::shared_ptr<LockRequestQueue> &queue, bool is_upgrade,
+                                          bool &is_already_abort) {
+  txn->LockTxn();
+  is_already_abort = false;
+  if (txn->GetState() == TransactionState::ABORTED) {
+    is_already_abort = true;
+    txn->UnlockTxn();
+    return true;
+  }
+
+  // Check if this transaction is the first one un-granted
+  auto self = std::find(queue->request_queue_.begin(), queue->request_queue_.end(), request);
+  auto first_ungranted =
+      std::find_if_not(queue->request_queue_.begin(), queue->request_queue_.end(),
+                       [](const std::shared_ptr<LockRequest> &request) { return request->granted_; });
+  if (self != first_ungranted) {
+    // not this request's turn yet
+    txn->UnlockTxn();
+    return false;
+  }
+
+  // Check if current request lock mode is compatible with all previous granted request's lock mode
+  auto is_compatible = queue->IsCompatibleUntil(self, compatible_matrix_);
+  if (!is_compatible) {
+    txn->UnlockTxn();
+    return false;
+  }
+
+  // This request can proceed, add lock record into txn's set
+  if (request->on_table_) {
+    if (request->lock_mode_ == LockMode::SHARED) {
+      txn->GetSharedTableLockSet()->insert(request->oid_);
+    } else if (request->lock_mode_ == LockMode::INTENTION_SHARED) {
+      txn->GetIntentionSharedTableLockSet()->insert(request->oid_);
+    } else if (request->lock_mode_ == LockMode::EXCLUSIVE) {
+      txn->GetExclusiveTableLockSet()->insert(request->oid_);
+    } else if (request->lock_mode_ == LockMode::INTENTION_EXCLUSIVE) {
+      txn->GetIntentionExclusiveTableLockSet()->insert(request->oid_);
+    } else if (request->lock_mode_ == LockMode::SHARED_INTENTION_EXCLUSIVE) {
+      txn->GetSharedIntentionExclusiveTableLockSet()->insert(request->oid_);
+    }
+  } else {
+    if (request->lock_mode_ == LockMode::SHARED) {
+      txn->GetSharedRowLockSet()->operator[](request->oid_).insert(request->rid_);
+    } else if (request->lock_mode_ == LockMode::EXCLUSIVE) {
+      txn->GetExclusiveRowLockSet()->operator[](request->oid_).insert(request->rid_);
+    }
+  }
+  // mark as granted
+  request->granted_ = true;
+  if (is_upgrade) {
+    // no more waiting upgrading request now
+    queue->upgrading_ = INVALID_TXN_ID;
+  }
+  txn->UnlockTxn();
+  return true;
+}
+
 auto LockManager::LockTable(Transaction *txn, LockMode lock_mode, const table_oid_t &oid) -> bool {
   /* lock and fetch lock request queue & txn*/
   auto queue = GetTableQueue(oid);  // in lock mode to read from map
@@ -158,6 +217,39 @@ auto LockManager::LockTable(Transaction *txn, LockMode lock_mode, const table_oi
     queue->upgrading_ = txn->GetTransactionId();
     LockManager::UnlockTableHelper(txn, oid, true);
   }
+
+  /* valid , make a request and add to queue for this resource at proper position(tail or first un-granted)*/
+  auto request = std::make_shared<LockRequest>(txn->GetTransactionId(), lock_mode, oid);
+  // is_upgrade 要比其他请求锁的优先级高，因此放在第一个未被授予的位置
+  queue->InsertIntoQueue(request, is_upgrade);
+
+  /* acquire coordination mutex and wait for it's the first un-granted request and could proceed */
+  txn->UnlockTxn();
+  bool already_abort = false;
+  /* proceed, add into this transaction's lock set and notify all in the queue if not abort */
+  queue->cv_.wait(lock,
+                  [&]() -> bool { return CouldLockRequestProceed(request, txn, queue, is_upgrade, already_abort); });
+
+  /* Remove this request from the queue since it's aborted */
+  if (already_abort) {
+    if (is_upgrade) {
+      // no more waiting upgrading request now
+      queue->upgrading_ = INVALID_TXN_ID;
+    }
+    auto it = std::find_if(queue->request_queue_.begin(), queue->request_queue_.end(),
+                           [&](const std::shared_ptr<LockRequest> &request) -> bool {
+                             return request->txn_id_ == txn->GetTransactionId() && request->oid_ == oid;
+                           });
+    queue->request_queue_.erase(it);
+    lock.unlock();
+    queue->cv_.notify_all();
+    return false;
+  }
+
+  // notify other waiting threads
+  lock.unlock();
+  queue->cv_.notify_all();
+  return true;
 }
 
 auto LockManager::UnlockTable(Transaction *txn, const table_oid_t &oid) -> bool { return true; }
