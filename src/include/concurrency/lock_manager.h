@@ -217,6 +217,13 @@ class LockManager {
       -> bool;
 
   /**
+   * Potentially change the transaction state to Shrinking
+   * @param transaction the transaction unlocking a resource
+   * @param unlock_mode the previous mode locked
+   */
+  void UpdateTransactionStateOnUnlock(Transaction *txn, LockMode unlock_mode);
+
+  /**
    * check if a pending locking request could proceed
    * this func assumes that request has already been placed into request_queue at proper index
    * (unlocking request won't block and always proceed as long as valid)
@@ -395,6 +402,9 @@ class LockManager {
    * @return true if the unlock is successful, false otherwise
    */
   auto UnlockTable(Transaction *txn, const table_oid_t &oid) -> bool;
+
+  /** Wrapper for UnlockTable, some special case for if this unlock is from upgrade locking request */
+  auto UnlockTableHelper(Transaction *txn, const table_oid_t &oid, bool from_upgrade = false) -> bool;
 
   /**
    * Acquire a lock on rid in the given lock_mode.
