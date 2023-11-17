@@ -110,15 +110,25 @@ auto LockManager::IsLockRequestValid(Transaction *txn, AbortReason &reason, bool
   }
 
   if (is_upgrade) {
-    if (1) {
+    if (upgrade_matrix_[prev_mode].find(mode) == upgrade_matrix_[prev_mode].end() && prev_mode != mode) {
+      // incompatible upgrade type
+      reason = AbortReason::INCOMPATIBLE_UPGRADE;
+      return false;
+    }
+    if (queue->upgrading_ != INVALID_TXN_ID && prev_mode != mode) {
+      // only one txn should be allowed to upgrade its lock on a given resource
+      reason = AbortReason::UPGRADE_CONFLICT;
+      return false;
     }
   }
-  
+
+  return true;
 }
 
 auto LockManager::IsUnlockRequestValid(Transaction *txn, AbortReason &reason, LockMode &mode,
                                        std::shared_ptr<LockRequestQueue> &queue, bool on_table, table_oid_t table_id,
                                        RID rid) -> bool {}
+
 auto LockManager::LockTable(Transaction *txn, LockMode lock_mode, const table_oid_t &oid) -> bool {
   /* lock and fetch lock request queue & txn*/
   auto queue = GetTableQueue(oid);  // in lock mode to read from map
@@ -129,7 +139,26 @@ auto LockManager::LockTable(Transaction *txn, LockMode lock_mode, const table_oi
   LockMode prev_mode;
   /* check if this is validate request */
   auto is_valid_request = IsLockRequestValid(txn, reason, is_upgrade, prev_mode, queue, true, lock_mode, oid, RID());
-  if () }
+  if (!is_valid_request) {
+    /* not valid , unlock + abort + throw exception */
+    txn->SetState(TransactionState::ABORTED);
+    txn->UnlockTxn();
+    throw TransactionAbortException(txn->GetTransactionId(), reason);
+  }
+
+  /* if it's upgrade request, special treatment */
+  if (is_upgrade) {
+    if (prev_mode == lock_mode) {
+      // same request， not upgrade, return true
+      txn->UnlockTxn();
+      return true;
+    }
+    /* an upgrade is equivalent to an unlock + a new lock */
+    // no releasing lock here, atomic release + upgrade
+    queue->upgrading_ = txn->GetTransactionId();
+    LockManager::UnlockTableHelper(txn, oid, true);
+  }
+}
 
 auto LockManager::UnlockTable(Transaction *txn, const table_oid_t &oid) -> bool { return true; }
 

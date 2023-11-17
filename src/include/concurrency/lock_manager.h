@@ -74,13 +74,52 @@ class LockManager {
     std::mutex latch_;
   };
 
-  /** Allocate a compatible matrix to check  if a request could proceed 
+  /** Allocate a compatible matrix to check  if a request could proceed
    * the key is the lock held by previous request, the value is lock mode allowd to be proceeded for new requests
    * @return compatible matrix
-  */
+   */
   static auto MakeCompatibleMatrix() -> std::unordered_map<LockMode, std::unordered_set<LockMode>> {
-std::unordered_map<LockMode, std::unordered_set<LockMode>> 
+    std::unordered_map<LockMode, std::unordered_set<LockMode>> compatible_matrix;
+    /**
+     * IS : IS, IX, S, SIX
+     * IX : IS, IX
+     * S  : IS, S
+     * SIX : IS
+     * X : null
+     */
+    compatible_matrix[LockMode::INTENTION_SHARED].insert({LockMode::INTENTION_SHARED, LockMode::INTENTION_EXCLUSIVE,
+                                                          LockMode::SHARED, LockMode::SHARED_INTENTION_EXCLUSIVE});
+    compatible_matrix[LockMode::INTENTION_EXCLUSIVE].insert(
+        {LockMode::INTENTION_SHARED, LockMode::INTENTION_EXCLUSIVE});
+    compatible_matrix[LockMode::SHARED].insert({LockMode::INTENTION_SHARED, LockMode::SHARED});
+    compatible_matrix[LockMode::SHARED_INTENTION_EXCLUSIVE].insert({LockMode::INTENTION_SHARED});
+    compatible_matrix[LockMode::EXCLUSIVE].insert({});
+    return compatible_matrix;
   }
+
+  /** Allocate a upgrade matrix to help check  if a upgrading request could upgrading towards the correct direction
+   * the key is the lock mode held by this transaction before on this resource, the value is allowed upgrading modes
+   * @return upgrade matrix
+   */
+  static auto MakeUpgrageMatrix() -> std::unordered_map<LockMode, std::unordered_set<LockMode>> {
+    std::unordered_map<LockMode, std::unordered_set<LockMode>> upgrade_matrix;
+    /**
+     * IS -> S, X, IX, SIX
+     * S -> X, SIX
+     * IX -> X, SIX
+     * SIX -> X
+     * X -> null
+     */
+    upgrade_matrix[LockMode::INTENTION_SHARED].insert(
+        {LockMode::SHARED, LockMode::EXCLUSIVE, LockMode::INTENTION_EXCLUSIVE, LockMode::SHARED_INTENTION_EXCLUSIVE});
+
+    upgrade_matrix[LockMode::SHARED].insert({LockMode::EXCLUSIVE, LockMode::SHARED_INTENTION_EXCLUSIVE});
+    upgrade_matrix[LockMode::INTENTION_EXCLUSIVE].insert({LockMode::EXCLUSIVE, LockMode::SHARED_INTENTION_EXCLUSIVE});
+    upgrade_matrix[LockMode::SHARED_INTENTION_EXCLUSIVE].insert({LockMode::EXCLUSIVE});
+    upgrade_matrix[LockMode::EXCLUSIVE].insert({});
+    return upgrade_matrix;
+  }
+
   /**
    * Creates a new lock manager configured for the deadlock detection policy.
    */
