@@ -460,7 +460,7 @@ class LockManager {
   auto UnlockRow(Transaction *txn, const table_oid_t &oid, const RID &rid) -> bool;
 
   /** Wrapper for UnlockTable, some special case for if this unlock is from upgrade locking request */
-  auto UnlockRowHelper(Transaction *txn, const table_oid_t &oid, const RID &rid, bool from_upgrade) -> bool;
+  auto UnlockRowHelper(Transaction *txn, const table_oid_t &oid, const RID &rid, bool from_upgrade = false) -> bool;
 
   /*** Graph API ***/
 

@@ -196,11 +196,11 @@ void LockManager::UpdateTransactionStateOnUnlock(Transaction *txn, LockMode unlo
 }
 auto LockManager::CouldLockRequestProceed(const std::shared_ptr<LockManager::LockRequest> &request, Transaction *txn,
                                           const std::shared_ptr<LockRequestQueue> &queue, bool is_upgrade,
-                                          bool &is_already_abort) -> bool {
+                                          bool &already_abort) -> bool {
   txn->LockTxn();
-  is_already_abort = false;
+  already_abort = false;
   if (txn->GetState() == TransactionState::ABORTED) {
-    is_already_abort = true;
+    already_abort = true;
     txn->UnlockTxn();
     return true;
   }
@@ -350,7 +350,7 @@ auto LockManager::UnlockTableHelper(Transaction *txn, const table_oid_t &oid, bo
   }
   /* Remove this request from the queue since it's completed */
   auto it = std::find_if(queue->request_queue_.begin(), queue->request_queue_.end(),
-                         [&](const std::shared_ptr<LockRequest> &request) {
+                         [&](const std::shared_ptr<LockRequest> &request) -> bool {
                            return request->txn_id_ == txn->GetTransactionId() && request->oid_ == oid;
                          });
   queue->request_queue_.erase(it);
@@ -516,8 +516,9 @@ void LockManager::RunCycleDetection() {
     std::this_thread::sleep_for(cycle_detection_interval);
     {  // TODO(students): detect deadlock
       // no more new transaction requests from this point
-      std::unique_lock table_lock(table_lock_map_latch_);
-      std::unique_lock row_lock(row_lock_map_latch_);
+      // {} 是unique_lock的范围
+      std::unique_lock<std::mutex> table_lock(table_lock_map_latch_);
+      std::unique_lock<std::mutex> row_lock(row_lock_map_latch_);
       LockManager::RebuildWaitForGraph();
       txn_id_t to_abort_txn = NO_CYCLE;
       while (LockManager::HasCycle(&to_abort_txn)) {
