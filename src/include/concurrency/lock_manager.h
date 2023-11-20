@@ -14,9 +14,12 @@
 
 #include <algorithm>
 #include <condition_variable>  // NOLINT
+#include <deque>
 #include <list>
+#include <map>
 #include <memory>
 #include <mutex>  // NOLINT
+#include <set>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -29,6 +32,9 @@
 namespace bustub {
 
 class TransactionManager;
+
+/* Macro for txn_id_t return value indicating no cycle detected */
+#define NO_CYCLE -1  // NOLINT
 
 /**
  * LockManager handles transactions asking for locks on records.
@@ -135,7 +141,7 @@ class LockManager {
    * the key is the lock mode held by this transaction before on this resource, the value is allowed upgrading modes
    * @return upgrade matrix
    */
-  static auto MakeUpgrageMatrix() -> std::unordered_map<LockMode, std::unordered_set<LockMode>> {
+  static auto MakeUpgradeMatrix() -> std::unordered_map<LockMode, std::unordered_set<LockMode>> {
     std::unordered_map<LockMode, std::unordered_set<LockMode>> upgrade_matrix;
     /**
      * IS -> S, X, IX, SIX
@@ -157,7 +163,7 @@ class LockManager {
   /**
    * Creates a new lock manager configured for the deadlock detection policy.
    */
-  LockManager() {
+  LockManager() : compatible_matrix_(MakeCompatibleMatrix()), upgrade_matrix_(MakeUpgradeMatrix()) {
     enable_cycle_detection_ = true;
     cycle_detection_thread_ = new std::thread(&LockManager::RunCycleDetection, this);
   }
@@ -177,9 +183,23 @@ class LockManager {
   auto GetTableQueue(table_oid_t table_oid) -> std::shared_ptr<LockRequestQueue> {
     std::lock_guard<std::mutex> lock(table_lock_map_latch_);
     if (table_lock_map_.find(table_oid) == table_lock_map_.end()) {
-      table_lock_map_.insert({table_oid, std::shared_ptr<LockRequestQueue>()});
+      table_lock_map_.insert({table_oid, std::make_shared<LockRequestQueue>()});
     }
     return table_lock_map_[table_oid];
+  }
+
+  /**
+   * 从map中获取LockRequestQueue的shared_ptr以避免竞争情况，首先在row_lock_map上获取latch
+   * 这个row还没有请求队列则创建一个空的，再返回
+   * @param rid the requesting row id
+   * @return shared_ptr to LockRequestQueue for this row
+   */
+  auto GetRowQueue(RID rid) -> std::shared_ptr<LockRequestQueue> {
+    std::lock_guard<std::mutex> lock(row_lock_map_latch_);
+    if (row_lock_map_.find(rid) == row_lock_map_.end()) {
+      row_lock_map_.insert({rid, std::make_shared<LockRequestQueue>()});
+    }
+    return row_lock_map_[rid];
   }
 
   /**
@@ -238,7 +258,8 @@ class LockManager {
    * @return True if could exit the condition variable waiting(should check if should_abort variable)
    */
   auto CouldLockRequestProceed(const std::shared_ptr<LockManager::LockRequest> &request, Transaction *txn,
-                               const std::shared_ptr<LockRequestQueue> &queue, bool is_upgrade, bool &is_already_abort);
+                               const std::shared_ptr<LockRequestQueue> &queue, bool is_upgrade, bool &is_already_abort)
+      -> bool;
 
   /**
    * [LOCK_NOTE]
@@ -388,7 +409,7 @@ class LockManager {
    * @param oid the table_oid_t of the table to be locked in lock_mode
    * @return true if the upgrade is successful, false otherwise
    */
-  auto LockTable(Transaction *txn, LockMode lock_mode, const table_oid_t &oid) noexcept(false) -> bool;
+  auto LockTable(Transaction *txn, LockMode lock_mode, const table_oid_t &oid) -> bool;
 
   /**
    * Release the lock held on a table by the transaction.
@@ -438,6 +459,9 @@ class LockManager {
    */
   auto UnlockRow(Transaction *txn, const table_oid_t &oid, const RID &rid) -> bool;
 
+  /** Wrapper for UnlockTable, some special case for if this unlock is from upgrade locking request */
+  auto UnlockRowHelper(Transaction *txn, const table_oid_t &oid, const RID &rid, bool from_upgrade) -> bool;
+
   /*** Graph API ***/
 
   /**
@@ -476,6 +500,96 @@ class LockManager {
 
  private:
   /** Fall 2022 */
+  /**
+   * Refresh and Rebuild the whole wait for graph
+   * everytime the back running thread wakes up
+   */
+  void RebuildWaitForGraph() {
+    waits_for_.clear();
+    for (const auto &[table_id, request_queue] : table_lock_map_) {
+      std::set<txn_id_t> granted;
+      for (const auto &request : request_queue->request_queue_) {
+        if (request->granted_) {
+          granted.insert(request->txn_id_);
+        } else {
+          // wait for a resource , build an edge from wait to holder
+          for (const auto &holder : granted) {
+            AddEdge(request->txn_id_, holder);
+          }
+        }
+      }
+    }
+
+    for (const auto &[row_id, request_queue] : row_lock_map_) {
+      std::set<txn_id_t> granted;
+      for (const auto &request : request_queue->request_queue_) {
+        if (request->granted_) {
+          granted.insert(request->txn_id_);
+        } else {
+          // wait for a resource , build an edge from wait to holder
+          for (const auto &holder : granted) {
+            AddEdge(request->txn_id_, holder);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Trim the already built waitfor graph when we decide to abort a transaction
+   */
+  void TrimGraph(txn_id_t aborted_txn) {
+    // trim this txn wait for
+    waits_for_.erase(aborted_txn);
+    // trim wait for this abort txn
+    for (auto &[start_node, end_node_set] : waits_for_) {
+      end_node_set.erase(aborted_txn);
+    }
+  }
+
+  /**
+   * Helper function to run DFS search on the wait_for graph
+   * the path is the current walking path and once cycle detected, it should main
+   * t0 -> t1 -> t2... -> t0 such a cycle path
+   * @return the first txn_id of the cycle
+   */
+  auto DepthFirstSearch(txn_id_t curr, std::set<txn_id_t> &visited, std::deque<txn_id_t> &path) -> txn_id_t {
+    // mark curr node as visited and append to current path
+    visited.insert(curr);
+    path.push_back(curr);
+
+    if (waits_for_.find(curr) != waits_for_.end()) {
+      for (const auto &neighbor : waits_for_[curr]) {
+        if (visited.find(neighbor) == visited.end()) {
+          // this neighbor not visited yet
+          auto cycle_id = DepthFirstSearch(neighbor, visited, path);
+          if (cycle_id != NO_CYCLE) {
+            // a cycle is detected ahead
+            return cycle_id;
+          }
+        } else if (std::find(path.begin(), path.end(), neighbor) != path.end()) {
+          // back edge detected
+          return neighbor;
+        }
+      }
+    }
+    // remove from curr path
+    path.pop_back();
+    return NO_CYCLE;
+  }
+
+  /**
+   * When we abort a transaction due to deadlock detection
+   * notify every waiting thread about this change
+   */
+  void NotifyAllTransaction() {
+    for (const auto &[table_id, request_queue] : table_lock_map_) {
+      request_queue->cv_.notify_all();
+    }
+    for (const auto &[row_id, request_queue] : row_lock_map_) {
+      request_queue->cv_.notify_all();
+    }
+  }
   /** compatible matrix to test if a new request could proceed given previous granted request */
   std::unordered_map<LockMode, std::unordered_set<LockMode>> compatible_matrix_;
   /** upgrade matrix to test if a new upgrade request could proceed given previous granted requests */
@@ -493,8 +607,9 @@ class LockManager {
 
   std::atomic<bool> enable_cycle_detection_;
   std::thread *cycle_detection_thread_;
+
   /** Waits-for graph representation. */
-  std::unordered_map<txn_id_t, std::vector<txn_id_t>> waits_for_;
+  std::map<txn_id_t, std::set<txn_id_t>> waits_for_;
   std::mutex waits_for_latch_;
 };
 

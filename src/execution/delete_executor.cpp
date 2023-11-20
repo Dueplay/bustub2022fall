@@ -29,11 +29,8 @@ auto DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
   if (delete_finished_) {
     return false;
   }
-  /* 插入之前，还没有会获得锁，则获取IX锁 */
-  /* begin insertion, IX lock on table if not locked yet*/
-
+  /* begin deletion, IX lock on table if not locked yet */
   auto txn = exec_ctx_->GetTransaction();
-  /*
   if (!txn->IsTableIntentionExclusiveLocked(plan_->TableOid())) {
     auto table_lock_success =
         exec_ctx_->GetLockManager()->LockTable(txn, LockManager::LockMode::INTENTION_EXCLUSIVE, plan_->TableOid());
@@ -42,7 +39,7 @@ auto DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
       throw bustub::Exception(ExceptionType::EXECUTION, "InsertExecutor cannot get IX lock on table");
     }
   }
-  */
+
   Tuple child_tuple{};
   int64_t count = 0;
   // fetch any available index on this table

@@ -135,7 +135,7 @@ auto LockManager::IsUnlockRequestValid(Transaction *txn, AbortReason &reason, Lo
     bool table_x_locked = txn->IsTableExclusiveLocked(table_id);
     bool table_ix_locked = txn->IsTableIntentionExclusiveLocked(table_id);
     bool table_six_locked = txn->IsTableSharedIntentionExclusiveLocked(table_id);
-    if (!table_s_locked && !table_is_locked && !table_x_locked && !table_ix_locked && table_six_locked) {
+    if (!table_s_locked && !table_is_locked && !table_x_locked && !table_ix_locked && !table_six_locked) {
       // no lock held at all on table
       reason = AbortReason::ATTEMPTED_UNLOCK_BUT_NO_LOCK_HELD;
       return false;
@@ -155,7 +155,7 @@ auto LockManager::IsUnlockRequestValid(Transaction *txn, AbortReason &reason, Lo
     bool row_s_locked = txn->IsRowSharedLocked(table_id, rid);
     bool row_x_locked = txn->IsRowExclusiveLocked(table_id, rid);
     if (!row_s_locked && !row_x_locked) {
-      // no lock held at all on table
+      // no lock held at all on row
       reason = AbortReason::ATTEMPTED_UNLOCK_BUT_NO_LOCK_HELD;
       return false;
     }
@@ -196,7 +196,7 @@ void LockManager::UpdateTransactionStateOnUnlock(Transaction *txn, LockMode unlo
 }
 auto LockManager::CouldLockRequestProceed(const std::shared_ptr<LockManager::LockRequest> &request, Transaction *txn,
                                           const std::shared_ptr<LockRequestQueue> &queue, bool is_upgrade,
-                                          bool &is_already_abort) {
+                                          bool &is_already_abort) -> bool {
   txn->LockTxn();
   is_already_abort = false;
   if (txn->GetState() == TransactionState::ABORTED) {
@@ -322,7 +322,7 @@ auto LockManager::UnlockTable(Transaction *txn, const table_oid_t &oid) -> bool 
   return UnlockTableHelper(txn, oid, false);
 }
 
-auto LockManager::UnlockTableHelper(Transaction *txn, const table_oid_t &oid, bool from_upgrade = false) -> bool {
+auto LockManager::UnlockTableHelper(Transaction *txn, const table_oid_t &oid, bool from_upgrade) -> bool {
   /* lock and fetch queue & transaction */
   auto queue = GetTableQueue(oid);
   std::unique_lock<std::mutex> lock;
@@ -378,19 +378,136 @@ auto LockManager::UnlockTableHelper(Transaction *txn, const table_oid_t &oid, bo
 }
 
 auto LockManager::LockRow(Transaction *txn, LockMode lock_mode, const table_oid_t &oid, const RID &rid) -> bool {
+  // fetch and lock queue & txn
+  auto queue = GetRowQueue(rid);  // in lock mode to read from map
+  std::unique_lock<std::mutex> lock(queue->latch_);
+  txn->LockTxn();
+  bool is_upgrade;
+  AbortReason reason;
+  LockMode prev_mode;
+  auto is_valid_request = IsLockRequestValid(txn, reason, is_upgrade, prev_mode, queue, false, lock_mode, oid, rid);
+  if (!is_valid_request) {
+    txn->SetState(TransactionState::ABORTED);
+    txn->UnlockTxn();
+    throw TransactionAbortException(txn->GetTransactionId(), reason);
+  }
+
+  if (is_upgrade) {
+    if (prev_mode == lock_mode) {
+      txn->UnlockTxn();
+      return true;
+    }
+    queue->upgrading_ = txn->GetTransactionId();
+    LockManager::UnlockRowHelper(txn, oid, rid, true);
+  }
+
+  auto request = std::make_shared<LockRequest>(txn->GetTransactionId(), lock_mode, oid, rid);
+  queue->InsertIntoQueue(request, is_upgrade);
+
+  txn->UnlockTxn();
+  bool already_abort = false;
+
+  /* proceed, add into this transaction's lock set and notify all in the queue if not aborted */
+  queue->cv_.wait(lock,
+                  [&]() -> bool { return CouldLockRequestProceed(request, txn, queue, is_upgrade, already_abort); });
+  if (already_abort) {
+    if (is_upgrade) {
+      queue->upgrading_ = INVALID_TXN_ID;
+    }
+    auto it = std::find_if(queue->request_queue_.begin(), queue->request_queue_.end(),
+                           [&](const std::shared_ptr<LockRequest> &request) -> bool {
+                             return request->txn_id_ == txn->GetTransactionId() && request->oid_ == oid &&
+                                    request->rid_ == rid;
+                           });
+    queue->request_queue_.erase(it);
+    lock.unlock();
+    queue->cv_.notify_all();
+    return false;
+  }
+
+  lock.unlock();
+  queue->cv_.notify_all();
   return true;
 }
 
-auto LockManager::UnlockRow(Transaction *txn, const table_oid_t &oid, const RID &rid) -> bool { return true; }
+auto LockManager::UnlockRow(Transaction *txn, const table_oid_t &oid, const RID &rid) -> bool {
+  return UnlockRowHelper(txn, oid, rid, false);
+}
 
-void LockManager::AddEdge(txn_id_t t1, txn_id_t t2) {}
+auto LockManager::UnlockRowHelper(Transaction *txn, const table_oid_t &oid, const RID &rid, bool from_upgrade) -> bool {
+  auto queue = GetRowQueue(rid);
+  std::unique_lock<std::mutex> lock;
+  if (!from_upgrade) {
+    lock = std::unique_lock<std::mutex>(queue->latch_);
+    txn->LockTxn();
+  }
+  AbortReason reason;
+  LockMode locked_mode;
+  auto is_valid_request = IsUnlockRequestValid(txn, reason, locked_mode, queue, false, oid, rid);
+  if (!is_valid_request) {
+    txn->SetState(TransactionState::ABORTED);
+    if (!from_upgrade) {
+      txn->UnlockTxn();
+    }
+    throw TransactionAbortException(txn->GetTransactionId(), reason);
+  }
 
-void LockManager::RemoveEdge(txn_id_t t1, txn_id_t t2) {}
+  if (!from_upgrade && txn->GetState() != TransactionState::COMMITTED && txn->GetState() != TransactionState::ABORTED) {
+    UpdateTransactionStateOnUnlock(txn, locked_mode);
+  }
+  /* Remove this request from the queue since it's completed */
+  auto it =
+      std::find_if(queue->request_queue_.begin(), queue->request_queue_.end(),
+                   [&](const std::shared_ptr<LockRequest> &request) -> bool {
+                     return request->txn_id_ == txn->GetTransactionId() && request->oid_ == oid && request->rid_ == rid;
+                   });
+  queue->request_queue_.erase(it);
+  /* Remove from the transaction's lock set */
+  if (locked_mode == LockMode::SHARED) {
+    txn->GetSharedRowLockSet()->operator[](oid).erase(rid);
+  } else if (locked_mode == LockMode::EXCLUSIVE) {
+    txn->GetExclusiveRowLockSet()->at(oid).erase(rid);
+  }
+  // not upgrade just unlockrow finsh, should notify other wait
+  if (!from_upgrade) {
+    txn->UnlockTxn();
+    lock.unlock();
+    queue->cv_.notify_all();
+  }
+  return true;
+}
+void LockManager::AddEdge(txn_id_t t1, txn_id_t t2) { waits_for_[t1].emplace(t2); }
 
-auto LockManager::HasCycle(txn_id_t *txn_id) -> bool { return false; }
+void LockManager::RemoveEdge(txn_id_t t1, txn_id_t t2) { waits_for_[t1].erase(t2); }
+
+auto LockManager::HasCycle(txn_id_t *txn_id) -> bool {
+  // assume the graph is already fully bulit
+  std::deque<txn_id_t> path;
+  std::set<txn_id_t> visited;
+  for (const auto &[start_node, end_node_set] : waits_for_) {
+    if (visited.find(start_node) == visited.end()) {
+      auto cycle_id = DepthFirstSearch(start_node, visited, path);
+      if (cycle_id != NO_CYCLE) {
+        // trim the path and retain only those involved in cycle
+        auto it = std::find(path.begin(), path.end(), cycle_id);
+        path.erase(path.begin(), it);
+        std::sort(path.begin(), path.end());
+        txn_id_t to_abort = path.back();
+        *txn_id = to_abort;  // pick the youngest to abort
+        return true;
+      }
+    }
+  }
+  return false;
+}
 
 auto LockManager::GetEdgeList() -> std::vector<std::pair<txn_id_t, txn_id_t>> {
-  std::vector<std::pair<txn_id_t, txn_id_t>> edges(0);
+  std::vector<std::pair<txn_id_t, txn_id_t>> edges;
+  for (const auto &[start_edge, end_edge_set] : waits_for_) {
+    for (const auto &end_edge : end_edge_set) {
+      edges.emplace_back(start_edge, end_edge);
+    }
+  }
   return edges;
 }
 
@@ -398,6 +515,21 @@ void LockManager::RunCycleDetection() {
   while (enable_cycle_detection_) {
     std::this_thread::sleep_for(cycle_detection_interval);
     {  // TODO(students): detect deadlock
+      // no more new transaction requests from this point
+      std::unique_lock table_lock(table_lock_map_latch_);
+      std::unique_lock row_lock(row_lock_map_latch_);
+      LockManager::RebuildWaitForGraph();
+      txn_id_t to_abort_txn = NO_CYCLE;
+      while (LockManager::HasCycle(&to_abort_txn)) {
+        // has cycle, remove this transaction from graph
+        LockManager::TrimGraph(to_abort_txn);
+        auto to_abort_ptr = TransactionManager::GetTransaction(to_abort_txn);
+        to_abort_ptr->SetState(TransactionState::ABORTED);
+      }
+      if (to_abort_txn != NO_CYCLE) {
+        // if we ever find a single cycle to be aborted, notify everyone
+        LockManager::NotifyAllTransaction();
+      }
     }
   }
 }

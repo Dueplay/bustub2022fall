@@ -17,8 +17,7 @@ enum class ExpressionType : uint8_t {
   TYPE_CAST = 4,  /**< Type cast expression type. */
   FUNCTION = 5,   /**< Function expression type. */
   AGG_CALL = 6,   /**< Aggregation function expression type. */
-  STAR = 7,       /**< Star expression type, will be rewritten by binder and won't
-                     appear in plan. */
+  STAR = 7,       /**< Star expression type, will be rewritten by binder and won't appear in plan. */
   UNARY_OP = 8,   /**< Unary expression type. */
   BINARY_OP = 9,  /**< Binary expression type. */
   ALIAS = 10,     /**< Alias expression type. */

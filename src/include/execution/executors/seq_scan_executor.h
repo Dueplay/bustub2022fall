@@ -66,5 +66,7 @@ class SeqScanExecutor : public AbstractExecutor {
   TableIterator cursor_;
 
   std::string table_name_{};
+  /** If this exectuor acquired a lock */
+  bool obtain_lock_{false};
 };
 }  // namespace bustub
