@@ -16,6 +16,7 @@ auto Optimizer::OptimizeCustom(const AbstractPlanNodeRef &plan) -> AbstractPlanN
   p = OptimizeNLJAsIndexJoin(p);
   // p = OptimizeNLJAsHashJoin(p);  // Enable this rule after you have
   // implemented hash join.
+  p = OptimizeMergeFilterScan(p);
   p = OptimizeOrderByAsIndexScan(p);
   p = OptimizeSortLimitAsTopN(p);
   return p;
