@@ -27,7 +27,7 @@ namespace bustub {
 template <typename K, typename V>
 ExtendibleHashTable<K, V>::ExtendibleHashTable(size_t bucket_size)
     : global_depth_(0), bucket_size_(bucket_size), num_buckets_(1) {
-  // dir nums = 2^global_depth
+  // dir nums = 2^global_depth. 最初全局深度为0，只有一个dir
   dir_.push_back(std::make_shared<Bucket>(bucket_size_, 0));
 }
 
@@ -96,10 +96,10 @@ void ExtendibleHashTable<K, V>::Insert(const K &key, const V &value) {
     // 如果溢出桶的本地深度等于全局深度，那么需要执行目录扩张和桶分裂
     if (bucket_ptr->GetDepth() == global_depth_) {
       global_depth_++;
-      dir_.resize(std::pow(2, global_depth_), nullptr);
+      dir_.resize(std::pow(2, global_depth_), nullptr); // dir扩张先用nullptr填充
       global_extend = true;
     }
-    // 如果局部深度小于全局深度，那么仅仅发生桶分裂。然后仅仅把局部深度增加1.这种情况是多个dir指针指向同一个bucket
+    // 如果局部深度小于全局深度，那么仅仅发生桶分裂。然后仅仅把局部深度增加1.这种情况是多个dir指针指向同一个bucket，创建新桶
     RedistributeBucket(bucket_ptr, index);
 
     // 桶扩张需要将新的指针指向同一个桶
@@ -252,7 +252,7 @@ auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> 
     return false;
   }
   //
-  emplace_front接受构造新元素所需的参数，并将这些参数传递给新元素的构造函数,插入到前面，局部性
+  emplace_front接受构造新元素所需的参数，并将这些参数传递给新元素的构造函数. 插入到前面，局部性
   list_.emplace_front(key, value);
   return true;
   */

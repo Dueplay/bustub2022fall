@@ -37,6 +37,7 @@ auto LRUKFrameRecord::GetFrameId() const -> size_t { return frame_id_; }
 
 LRUKReplacer::LRUKReplacer(size_t num_frames, size_t k) : k_(k) { frames_.resize(num_frames, nullptr); }
 
+// 驱逐一个frame，先驱逐不满k次的，再驱逐>=k次的
 auto LRUKReplacer::Evict(frame_id_t *frame_id) -> bool {
   std::scoped_lock<std::mutex> lock(latch_);
   if (lru_permature_.empty() && lru_mature_.empty()) {
@@ -62,6 +63,7 @@ void LRUKReplacer::RecordAccess(frame_id_t frame_id) {
     // from premature to mature
     lru_permature_.erase(frames_[frame_id]);
   }
+  // 已经在mature中，先删除在插入，lru
   if (is_evictable && (!is_permature)) {
     lru_mature_.erase(frames_[frame_id]);
   }

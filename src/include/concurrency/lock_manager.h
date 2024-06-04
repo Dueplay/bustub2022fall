@@ -41,6 +41,7 @@ class TransactionManager;
  */
 class LockManager {
  public:
+  // S,X,IS,IX,SIX
   enum class LockMode { SHARED, EXCLUSIVE, INTENTION_SHARED, INTENTION_EXCLUSIVE, SHARED_INTENTION_EXCLUSIVE };
 
   /**
@@ -83,6 +84,7 @@ class LockManager {
         return;
       }
       // insert into the first un-granted position
+      // find_if_not,谓词函数返回 false 时停止查找。
       const auto it = std::find_if_not(request_queue_.begin(), request_queue_.end(),
                                        [](const std::shared_ptr<LockRequest> &request) { return request->granted_; });
       request_queue_.insert(it, request);
@@ -95,6 +97,7 @@ class LockManager {
      */
     auto IsCompatibleUntil(std::list<std::shared_ptr<LockRequest>>::iterator next,
                            std::unordered_map<LockMode, std::unordered_set<LockMode>> &compatible_matrix) -> bool {
+      // 判断next之前的已经授予的锁请求是否能与next兼容
       for (auto it = request_queue_.begin(); it != next; it++) {
         if (compatible_matrix[(*it)->lock_mode_].find((*next)->lock_mode_) ==
             compatible_matrix[(*it)->lock_mode_].end()) {
@@ -175,7 +178,7 @@ class LockManager {
   }
 
   /**
-   * 从map中获取LockRequestQueue的shared_ptr以避免竞争情况，首先在map上获取latch
+   * 从table_lock_map_中获取LockRequestQueue的shared_ptr以避免竞争情况，首先在table_lock_map_上获取latch
    * 这个表还没有请求队列则创建一个空的，再返回
    * @param table_oid the requesting table id
    * @return shared_ptr to LockRequestQueue for this table
@@ -189,7 +192,7 @@ class LockManager {
   }
 
   /**
-   * 从map中获取LockRequestQueue的shared_ptr以避免竞争情况，首先在row_lock_map上获取latch
+   * 从row_lock_map_中获取LockRequestQueue的shared_ptr以避免竞争情况，首先在row_lock_map上获取latch
    * 这个row还没有请求队列则创建一个空的，再返回
    * @param rid the requesting row id
    * @return shared_ptr to LockRequestQueue for this row
@@ -543,7 +546,7 @@ class LockManager {
     waits_for_.erase(aborted_txn);
     // trim wait for this abort txn
     for (auto &[start_node, end_node_set] : waits_for_) {
-      end_node_set.erase(aborted_txn);
+      end_node_set.erase(aborted_txn); // 不再等待被aborted的事务了
     }
   }
 
@@ -590,9 +593,9 @@ class LockManager {
       request_queue->cv_.notify_all();
     }
   }
-  /** compatible matrix to test if a new request could proceed given previous granted request */
+  /** compatible matrix to check if a new request could proceed given previous granted request */
   std::unordered_map<LockMode, std::unordered_set<LockMode>> compatible_matrix_;
-  /** upgrade matrix to test if a new upgrade request could proceed given previous granted requests */
+  /** upgrade matrix to check if a new upgrade request could proceed given previous granted requests */
   std::unordered_map<LockMode, std::unordered_set<LockMode>> upgrade_matrix_;
 
   /** Structure that holds lock requests for a given table oid */

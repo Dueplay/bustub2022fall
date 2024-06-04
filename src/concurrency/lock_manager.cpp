@@ -293,6 +293,11 @@ auto LockManager::LockTable(Transaction *txn, LockMode lock_mode, const table_oi
   txn->UnlockTxn();
   bool already_abort = false;
   /* proceed, add into this transaction's lock set and notify all in the queue if not abort */
+  /**
+   * wait如果 pred 为 true，则函数立即返回，并且不会解锁 lock。
+    如果 pred 为 false，则函数会解锁 lock 并阻塞当前线程，直到其他线程调用 notify_one() 或 notify_all() 来唤醒它。
+    唤醒后，它会重新获得 lock 并再次检查 pred，如果 pred 变为 true，则返回。
+  */
   queue->cv_.wait(lock,
                   [&]() -> bool { return CouldLockRequestProceed(request, txn, queue, is_upgrade, already_abort); });
 
@@ -481,7 +486,7 @@ void LockManager::AddEdge(txn_id_t t1, txn_id_t t2) { waits_for_[t1].emplace(t2)
 void LockManager::RemoveEdge(txn_id_t t1, txn_id_t t2) { waits_for_[t1].erase(t2); }
 
 auto LockManager::HasCycle(txn_id_t *txn_id) -> bool {
-  // assume the graph is already fully bulit
+  // assume the graph is already fully built
   std::deque<txn_id_t> path;
   std::set<txn_id_t> visited;
   for (const auto &[start_node, end_node_set] : waits_for_) {
